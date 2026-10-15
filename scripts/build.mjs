@@ -15,12 +15,28 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 // Sin SITE_URL, la web usa enlaces relativos (sirve en cualquier hosting) y no emite canónicas.
 // En Vercel, si no defines SITE_URL, se usa el dominio de producción del proyecto
 // (documaus.vercel.app o tu dominio propio cuando lo conectes). Las vistas previas no llevan canónicas.
-const VERCEL_PROD = process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '';
-const SITE_URL = (process.env.SITE_URL || VERCEL_PROD).trim().replace(/\/+$/, '');
-const API_BASE = (process.env.API_BASE || '').trim().replace(/\/+$/, '');
-if (SITE_URL && !/^https?:\/\/[^\s/]+(\/[^\s]*)?$/.test(SITE_URL)) throw new Error(`SITE_URL inválida: "${SITE_URL}". Ejemplo: https://documaus.com`);
-if (API_BASE && !/^(\/|https:\/\/)[^\s]*$/.test(API_BASE)) throw new Error(`API_BASE inválida: "${API_BASE}". Ejemplo: /api`);
+// Nunca se detiene el armado por un valor mal escrito: se corrige o se ignora con un aviso.
+function cleanSiteUrl(raw) {
+  let v = String(raw || '').trim().replace(/^["']+|["']+$/g, '');
+  if (!v) return '';
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  try {
+    const u = new URL(v);
+    return `${u.protocol}//${u.host}${u.pathname.replace(/\/+$/, '')}`;
+  } catch {
+    console.warn(`Aviso: SITE_URL "${raw}" no es una dirección válida; se arma sin dominio.`);
+    return '';
+  }
+}
+function cleanApiBase(raw) {
+  const v = String(raw || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/+$/, '');
+  if (!v || /^(\/|https:\/\/)\S*$/.test(v)) return v;
+  console.warn(`Aviso: API_BASE "${raw}" no es válida (usa /api o https://…); se ignora.`);
+  return '';
+}
+const VERCEL_PROD = process.env.VERCEL_ENV === 'production' ? process.env.VERCEL_PROJECT_PRODUCTION_URL : '';
+const SITE_URL = cleanSiteUrl(process.env.SITE_URL) || cleanSiteUrl(VERCEL_PROD);
+const API_BASE = cleanApiBase(process.env.API_BASE);
 writeFileSync(`${ROOT}assets/js/env.js`, `// Generado por scripts/build.mjs: no lo edites a mano.
 // Para cambiarlo: SITE_URL=https://tudominio.com API_BASE=/api npm run build
 export const ENV = ${JSON.stringify({ siteUrl: SITE_URL, apiBase: API_BASE }, null, 2)};
