@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&display=swap">
-<link rel="stylesheet" href="assets/css/maus.css?v=mv991wx6">
+<link rel="stylesheet" href="assets/css/maus.css?v=mv9aulfq">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Maus es gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí. Todas las herramientas funcionan gratis y sin registrarte. El plan Pro es opcional."}},{"@type":"Question","name":"¿Mis archivos están seguros?","acceptedAnswer":{"@type":"Answer","text":"Sí. Tus PDF se procesan dentro de tu navegador y nunca se suben a ningún servidor. Cuando cierras la página, desaparecen."}},{"@type":"Question","name":"¿Funciona en el celular?","acceptedAnswer":{"@type":"Answer","text":"Sí, en Android y iPhone, desde Chrome, Safari o cualquier navegador moderno. No necesitas instalar ninguna app."}},{"@type":"Question","name":"¿Hay un límite de tamaño?","acceptedAnswer":{"@type":"Answer","text":"No ponemos límites. El único límite es la memoria de tu equipo: en celulares, los PDF de cientos de páginas pueden tardar un poco más."}},{"@type":"Question","name":"¿Puedo convertir Word a PDF?","acceptedAnswer":{"@type":"Answer","text":"Muy pronto. Esa conversión necesita un servidor y la estamos preparando. Mientras tanto, en Word puedes usar Archivo › Guardar como › PDF."}},{"@type":"Question","name":"¿La firma de Maus tiene validez legal?","acceptedAnswer":{"@type":"Answer","text":"Maus coloca una imagen de tu firma (firma visual). Sirve para la mayoría de documentos del día a día, pero no reemplaza a una firma digital certificada."}}]}</script>
 </head>
 <body>
@@ -45,6 +45,7 @@
     <button class="chip" type="button" data-cat="convertir" aria-pressed="false">Convertir</button>
     <button class="chip" type="button" data-cat="editar" aria-pressed="false">Editar</button>
     <button class="chip" type="button" data-cat="seguridad" aria-pressed="false">Seguridad</button>
+    <button class="chip" type="button" data-cat="ia" aria-pressed="false">Inteligencia</button>
   </div>
 </section>
 <div class="wrap">
@@ -83,6 +84,12 @@
       <span class="tile cat-editar"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284"/><path d="M3 21h18"/></svg></span>
       <h3>Firmar PDF</h3>
       <p>Dibuja o escribe tu firma y colócala sobre el documento.</p>
+      
+    </a>
+    <a class="tool-card cat-ia" href="resumir-pdf.html" data-cat="ia">
+      <span class="tile cat-ia"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span>
+      <h3>Resumir PDF</h3>
+      <p>Saca las ideas principales y palabras clave de un PDF largo.</p>
       
     </a>
     <a class="tool-card cat-organizar" href="organizar-pdf.html" data-cat="organizar">
@@ -192,7 +199,7 @@
         <div class="plan-name">Gratis</div>
         <div class="plan-price">S/ 0 <small>para siempre</small></div>
         <ul>
-          <li><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Las 15 herramientas</span></li>
+          <li><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Las 16 herramientas</span></li>
           <li><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Sin límite de archivos</span></li>
           <li><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Sin registro y sin marcas de agua</span></li>
           <li><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Tus archivos nunca salen de tu equipo</span></li>
@@ -256,6 +263,6 @@
     </div>
   </div>
 </footer>
-<script type="module" src="assets/js/site.js?v=mv991wx6"></script>
+<script type="module" src="assets/js/site.js?v=mv9aulfq"></script>
 </body>
 </html>

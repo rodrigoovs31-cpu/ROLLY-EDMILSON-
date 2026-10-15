@@ -231,6 +231,7 @@ const STEP2 = {
   'proteger-pdf': ['Escribe una contraseña', 'Repítela para confirmar y guárdala bien.'],
   'desbloquear-pdf': ['Escribe la contraseña', 'Si solo tiene restricciones, déjala vacía.'],
   'ocr-pdf': ['Elige el idioma', 'Español, inglés o portugués.'],
+  'resumir-pdf': ['Elige el largo', 'Corto, medio o largo. Recibes las ideas principales en puntos.'],
 };
 
 function related(t) {

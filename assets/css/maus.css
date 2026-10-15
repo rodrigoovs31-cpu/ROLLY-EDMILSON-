@@ -23,6 +23,7 @@
   --c-convertir: #E0622A;
   --c-editar: #D2427A;
   --c-seguridad: #2E6FDB;
+  --c-ia: #0B8AA8;
   --logo-body: #16182B;
   --logo-eye: #FFFFFF;
   --overlay: rgba(14, 15, 26, .55);
@@ -59,6 +60,7 @@
     --c-convertir: #FF9157;
     --c-editar: #F27AA6;
     --c-seguridad: #6EA2FF;
+    --c-ia: #38C6E6;
     --logo-body: #ECEDF6;
     --logo-eye: #171929;
     --overlay: rgba(0, 0, 0, .65);
@@ -86,6 +88,7 @@
   --c-convertir: #FF9157;
   --c-editar: #F27AA6;
   --c-seguridad: #6EA2FF;
+  --c-ia: #38C6E6;
   --logo-body: #ECEDF6;
   --logo-eye: #171929;
   --overlay: rgba(0, 0, 0, .65);
@@ -254,6 +257,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .cat-convertir { --c: var(--c-convertir); }
 .cat-editar { --c: var(--c-editar); }
 .cat-seguridad { --c: var(--c-seguridad); }
+.cat-ia { --c: var(--c-ia); }
 
 .section { padding-block: 56px; border-top: 1px solid var(--line); }
 .section-head { max-width: 640px; margin-bottom: 28px; }
@@ -616,3 +620,15 @@ body.dragging .drop-overlay { opacity: 1; }
 }
 .rotate-all { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
 @media (max-width: 600px) { .signer-stage { padding: 8px; } }
+
+/* Resumen */
+.summary-box { width: 100%; display: grid; gap: 16px; justify-items: start; text-align: left; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.summary-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.summary-points { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; }
+.summary-points li { line-height: 1.55; }
+.summary-points li::marker { color: var(--c-ia); }
+.summary-keywords { display: grid; gap: 8px; }
+.kw-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw { padding: .2em .7em; border-radius: 999px; background: var(--surface-2); font-size: .88rem; font-weight: 600; }
+.ai-note { display: flex; gap: 8px; align-items: flex-start; }
+.ai-note .ic { color: var(--c-ia); flex: none; margin-top: 2px; }

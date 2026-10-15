@@ -7,6 +7,7 @@ export const CATEGORIES = [
   { id: 'convertir', name: 'Convertir' },
   { id: 'editar', name: 'Editar' },
   { id: 'seguridad', name: 'Seguridad' },
+  { id: 'ia', name: 'Inteligencia' },
 ];
 
 export const TOOLS = [
@@ -57,6 +58,14 @@ export const TOOLS = [
     title: 'Firmar PDF gratis: poner tu firma en un PDF',
     desc: 'Firma un PDF desde el celular o la computadora: dibuja tu firma, escríbela o sube una imagen y colócala donde quieras.',
     about: 'Crea tu firma una vez y colócala en las páginas que necesites. Puedes moverla y cambiarle el tamaño antes de descargar el documento firmado. Es una firma visual, no una firma digital certificada.',
+  },
+  {
+    id: 'resumir-pdf', module: 'summarize', cat: 'ia', icon: 'sparkles', status: 'ok',
+    name: 'Resumir PDF',
+    short: 'Saca las ideas principales y palabras clave de un PDF largo.',
+    title: 'Resumir PDF gratis con IA: resumen automático en español',
+    desc: 'Obtén las ideas principales y las palabras clave de un PDF en segundos. Gratis, sin registro y sin subir tu documento.',
+    about: 'Maus lee todo el texto del PDF y elige las frases que mejor resumen el documento, junto con sus palabras clave. En Chrome de computadora compatible usa además la IA integrada del navegador (Gemini Nano), que trabaja dentro de tu equipo. Ideal para separatas, leyes, contratos e informes.',
   },
   {
     id: 'organizar-pdf', module: 'organize', cat: 'organizar', icon: 'layout-grid', status: 'ok',

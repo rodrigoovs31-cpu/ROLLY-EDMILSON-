@@ -4,16 +4,19 @@ Web completa de herramientas PDF, al estilo de las grandes páginas de PDF pero 
 Todo funciona **dentro del navegador**: los archivos de tus usuarios nunca se suben a un servidor. Por eso
 publicarla es gratis (no necesitas pagar un servidor) y puedes prometer privacidad total.
 
-## Herramientas incluidas (15)
+## Herramientas incluidas (16)
 
-| Organizar | Optimizar | Convertir | Editar | Seguridad |
-|---|---|---|---|---|
-| Unir PDF | Comprimir PDF (con peso máximo en MB) | JPG a PDF | Firmar PDF | Proteger PDF (AES-256) |
-| Dividir PDF | OCR: sacar texto (español, inglés, portugués) | PDF a JPG | Numerar páginas | Desbloquear PDF |
-| Organizar PDF | | | Marca de agua | |
-| Rotar PDF | | | | |
-| Eliminar páginas | | | | |
-| Extraer páginas | | | | |
+| Organizar | Optimizar | Convertir | Editar | Seguridad | Inteligencia |
+|---|---|---|---|---|---|
+| Unir PDF | Comprimir PDF (con peso máximo en MB) | JPG a PDF | Firmar PDF | Proteger PDF (AES-256) | Resumir PDF |
+| Dividir PDF | OCR: sacar texto (español, inglés, portugués) | PDF a JPG | Numerar páginas | Desbloquear PDF | |
+| Organizar PDF | | | Marca de agua | | |
+| Rotar PDF | | | | | |
+| Eliminar páginas | | | | | |
+| Extraer páginas | | | | | |
+
+**Resumir PDF** funciona sin servidor: en Chrome de computadora compatible usa la IA integrada del navegador
+(Gemini Nano); en los demás equipos elige las frases más importantes con un algoritmo (TextRank). No hay costo por uso.
 
 Aparecen como **"Pronto"**: Word a PDF, PDF a Word, Excel a PDF y PowerPoint a PDF. Esas conversiones necesitan
 un servidor (fase 2, ver abajo).
