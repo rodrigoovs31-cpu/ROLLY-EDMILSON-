@@ -1,0 +1,151 @@
+// Catálogo de herramientas. De aquí salen la portada, el menú y cada página.
+// status: 'ok' = funciona en el navegador · 'soon' = necesita servidor (fase 2)
+
+export const CATEGORIES = [
+  { id: 'organizar', name: 'Organizar' },
+  { id: 'optimizar', name: 'Optimizar' },
+  { id: 'convertir', name: 'Convertir' },
+  { id: 'editar', name: 'Editar' },
+  { id: 'seguridad', name: 'Seguridad' },
+];
+
+export const TOOLS = [
+  {
+    id: 'unir-pdf', module: 'merge', cat: 'organizar', icon: 'file-stack', status: 'ok',
+    name: 'Unir PDF',
+    short: 'Junta varios PDF en uno solo, en el orden que tú elijas.',
+    title: 'Unir PDF gratis: juntar archivos PDF en uno',
+    desc: 'Une varios PDF en un solo archivo en segundos. Gratis, sin registro y sin subir tus archivos a ningún servidor.',
+    about: 'Selecciona dos o más PDF, arrástralos para ordenarlos y descarga un único archivo. Ideal para juntar DNI, recibos, constancias y anexos de un trámite en un solo documento.',
+  },
+  {
+    id: 'dividir-pdf', module: 'split', cat: 'organizar', icon: 'scissors', status: 'ok',
+    name: 'Dividir PDF',
+    short: 'Separa un PDF por rangos o en páginas sueltas.',
+    title: 'Dividir PDF gratis: separar páginas de un PDF',
+    desc: 'Divide un PDF por rangos de páginas, cada cierto número de páginas o en archivos individuales. Gratis y sin registro.',
+    about: 'Escribe los rangos que necesitas (por ejemplo 1-3, 4-6) o separa cada página en su propio archivo. Si salen varios archivos, se descargan juntos en un ZIP.',
+  },
+  {
+    id: 'comprimir-pdf', module: 'compress', cat: 'optimizar', icon: 'minimize-2', status: 'ok',
+    name: 'Comprimir PDF',
+    short: 'Reduce el peso del PDF. Puedes pedir un tamaño máximo en MB.',
+    title: 'Comprimir PDF gratis: reducir el tamaño a menos de 1 MB',
+    desc: 'Reduce el peso de tus PDF para enviarlos por correo, WhatsApp o subirlos a un trámite. Elige un tamaño máximo en MB.',
+    about: '¿El portal del trámite te pide un PDF de menos de 2 MB? Elige "Tamaño máximo" y Maus prueba hasta dejarlo por debajo de ese peso. La compresión fuerte convierte las páginas en imagen: es perfecta para documentos escaneados.',
+  },
+  {
+    id: 'jpg-a-pdf', module: 'images-to-pdf', cat: 'convertir', icon: 'image-plus', status: 'ok',
+    name: 'JPG a PDF',
+    short: 'Convierte fotos e imágenes (JPG, PNG, WEBP) en un PDF.',
+    title: 'JPG a PDF gratis: convertir fotos e imágenes a PDF',
+    desc: 'Convierte fotos JPG, PNG o WEBP en un solo PDF. Elige tamaño A4 o Carta, orientación y márgenes. Gratis y sin registro.',
+    about: 'Toma fotos de tus documentos con el celular y conviértelas en un PDF ordenado. Las fotos giradas se enderezan solas según la orientación de la cámara.',
+  },
+  {
+    id: 'pdf-a-jpg', module: 'pdf-to-images', cat: 'convertir', icon: 'image-down', status: 'ok',
+    name: 'PDF a JPG',
+    short: 'Convierte cada página del PDF en una imagen JPG o PNG.',
+    title: 'PDF a JPG gratis: convertir PDF a imagen',
+    desc: 'Convierte cada página de un PDF en una imagen JPG o PNG de alta calidad. Gratis, rápido y sin registro.',
+    about: 'Cada página se guarda como una imagen. Si el PDF tiene varias páginas, recibes todas juntas en un ZIP. Útil para publicar en redes o enviar por WhatsApp.',
+  },
+  {
+    id: 'firmar-pdf', module: 'sign', cat: 'editar', icon: 'signature', status: 'ok',
+    name: 'Firmar PDF',
+    short: 'Dibuja o escribe tu firma y colócala sobre el documento.',
+    title: 'Firmar PDF gratis: poner tu firma en un PDF',
+    desc: 'Firma un PDF desde el celular o la computadora: dibuja tu firma, escríbela o sube una imagen y colócala donde quieras.',
+    about: 'Crea tu firma una vez y colócala en las páginas que necesites. Puedes moverla y cambiarle el tamaño antes de descargar el documento firmado. Es una firma visual, no una firma digital certificada.',
+  },
+  {
+    id: 'organizar-pdf', module: 'organize', cat: 'organizar', icon: 'layout-grid', status: 'ok',
+    name: 'Organizar PDF',
+    short: 'Ordena, gira y elimina páginas viendo cada una.',
+    title: 'Organizar PDF gratis: ordenar y eliminar páginas',
+    desc: 'Cambia el orden de las páginas de un PDF arrastrándolas, gíralas o elimínalas. Gratis y sin registro.',
+    about: 'Verás todas las páginas en miniatura. Arrástralas para cambiar el orden, gíralas o quita las que sobran, y descarga el PDF ya ordenado.',
+  },
+  {
+    id: 'rotar-pdf', module: 'rotate', cat: 'organizar', icon: 'rotate-cw', status: 'ok',
+    name: 'Rotar PDF',
+    short: 'Gira todas las páginas o solo las que salieron de lado.',
+    title: 'Rotar PDF gratis: girar páginas de un PDF',
+    desc: 'Gira las páginas de tu PDF 90°, 180° o 270°, todas a la vez o una por una. Gratis y sin registro.',
+    about: 'Toca una página para girarla o usa "Girar todas". El giro se guarda en el PDF, así que se verá derecho en cualquier celular o computadora.',
+  },
+  {
+    id: 'eliminar-paginas', module: 'remove-pages', cat: 'organizar', icon: 'file-x', status: 'ok',
+    name: 'Eliminar páginas',
+    short: 'Quita las páginas que no necesitas de un PDF.',
+    title: 'Eliminar páginas de un PDF gratis',
+    desc: 'Elimina páginas de un PDF tocándolas o escribiendo los números. Gratis, sin registro y sin subir archivos.',
+    about: 'Marca las páginas que quieres quitar, ya sea tocándolas o escribiendo sus números (por ejemplo 2, 5-7), y descarga el PDF sin ellas.',
+  },
+  {
+    id: 'extraer-paginas', module: 'extract-pages', cat: 'organizar', icon: 'file-output', status: 'ok',
+    name: 'Extraer páginas',
+    short: 'Saca solo las páginas que necesitas a un PDF nuevo.',
+    title: 'Extraer páginas de un PDF gratis',
+    desc: 'Crea un PDF nuevo solo con las páginas que elijas, o un archivo por cada página. Gratis y sin registro.',
+    about: 'Marca las páginas que quieres conservar y obtén un PDF nuevo solo con ellas. El archivo original no se modifica.',
+  },
+  {
+    id: 'numerar-paginas', module: 'page-numbers', cat: 'editar', icon: 'list-ordered', status: 'ok',
+    name: 'Numerar páginas',
+    short: 'Agrega números de página en la posición que elijas.',
+    title: 'Numerar páginas de un PDF gratis',
+    desc: 'Agrega números de página a tu PDF: elige la posición, el formato ("Página 1 de 10") y desde qué número empezar.',
+    about: 'Ideal para tesis, informes y expedientes. Puedes saltar la portada y empezar la numeración desde el número que necesites.',
+  },
+  {
+    id: 'marca-de-agua', module: 'watermark', cat: 'editar', icon: 'stamp', status: 'ok',
+    name: 'Marca de agua',
+    short: 'Estampa un texto como "COPIA" o "CONFIDENCIAL" en tu PDF.',
+    title: 'Poner marca de agua a un PDF gratis',
+    desc: 'Agrega una marca de agua de texto a todas las páginas de tu PDF. Elige color, tamaño, transparencia y posición.',
+    about: 'Protege tus documentos escribiendo encima "SOLO PARA TRÁMITE", "COPIA" o tu nombre. Así nadie puede reutilizar la copia de tu DNI para otra cosa.',
+  },
+  {
+    id: 'proteger-pdf', module: 'protect', cat: 'seguridad', icon: 'lock', status: 'ok',
+    name: 'Proteger PDF',
+    short: 'Ponle contraseña a tu PDF para que nadie más lo abra.',
+    title: 'Proteger PDF con contraseña gratis',
+    desc: 'Pon contraseña a un PDF con cifrado AES de 256 bits. Gratis, y el archivo nunca sale de tu dispositivo.',
+    about: 'El PDF queda cifrado con AES de 256 bits. Para abrirlo pedirá la contraseña. Guárdala bien: sin ella no se puede recuperar el contenido.',
+  },
+  {
+    id: 'desbloquear-pdf', module: 'unlock', cat: 'seguridad', icon: 'lock-open', status: 'ok',
+    name: 'Desbloquear PDF',
+    short: 'Quita la contraseña y las restricciones de tu PDF.',
+    title: 'Desbloquear PDF gratis: quitar contraseña',
+    desc: 'Quita la contraseña de un PDF que es tuyo y elimina las restricciones de impresión o copia. Gratis y sin registro.',
+    about: 'Si el PDF pide contraseña para abrirse, escríbela una vez y descarga una copia sin protección. Si solo tiene restricciones de impresión o copia, se quitan sin contraseña.',
+  },
+  {
+    id: 'ocr-pdf', module: 'ocr', cat: 'optimizar', icon: 'scan-text', status: 'ok',
+    name: 'OCR: sacar texto',
+    short: 'Reconoce el texto de fotos y PDF escaneados para copiarlo.',
+    title: 'OCR gratis en español: pasar imagen o PDF escaneado a texto',
+    desc: 'Extrae el texto de fotos y PDF escaneados con reconocimiento óptico de caracteres (OCR) en español, inglés y portugués.',
+    about: 'Sube la foto de un documento o un PDF escaneado y obtén el texto listo para copiar y editar. La primera vez descarga el modelo del idioma, unos segundos.',
+  },
+  {
+    id: 'word-a-pdf', cat: 'convertir', icon: 'file-text', status: 'soon',
+    name: 'Word a PDF', short: 'Convierte documentos DOC y DOCX a PDF.',
+  },
+  {
+    id: 'pdf-a-word', cat: 'convertir', icon: 'file-type', status: 'soon',
+    name: 'PDF a Word', short: 'Convierte tu PDF en un Word editable.',
+  },
+  {
+    id: 'excel-a-pdf', cat: 'convertir', icon: 'sheet', status: 'soon',
+    name: 'Excel a PDF', short: 'Convierte hojas de cálculo XLS y XLSX a PDF.',
+  },
+  {
+    id: 'powerpoint-a-pdf', cat: 'convertir', icon: 'presentation', status: 'soon',
+    name: 'PowerPoint a PDF', short: 'Convierte presentaciones PPT y PPTX a PDF.',
+  },
+];
+
+export const toolById = (id) => TOOLS.find((t) => t.id === id);
