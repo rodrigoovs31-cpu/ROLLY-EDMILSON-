@@ -46,7 +46,12 @@ Para abogados, notarías, estudios contables y postores de licitaciones del Esta
 1. **Escrito principal + medios probatorios**: el primer PDF es el escrito (demanda, recurso, propuesta técnica);
    los demás son anexos. Funciona con PDF de cientos de hojas y todo se arma en el Web Worker, sin subir nada.
 2. **Etiquetas automáticas**: ANEXO 1-A, 1-B, 1-C… (o Anexo 1, 2, 3…). Se reordenan con flechas o arrastrando y se
-   renumeran solas. De un mismo PDF puedes sacar varios anexos con distintas páginas ("Extraer otras páginas").
+   renumeran solas. Toca una etiqueta para escribir la tuya (por ejemplo, si el escrito ya cita "Anexo 1-C"):
+   las siguientes continúan desde ella (1-D, 1-E…) y si dos se repiten, te avisa antes de armar.
+   **Separar anexos (miniaturas)**: en el escrito o en cualquier prueba ves todas las páginas, marcas las que forman
+   cada anexo ("Crear un anexo con lo marcado" o "Un anexo por cada página") y quitas con × los que no sirvan.
+   Si el escrito trae sus anexos al final, esas páginas salen del escrito; de otros expedientes, las páginas que
+   no elijas no se usan.
 3. **Finalidad probatoria** de cada anexo (va al índice y a la hoja separadora) y **resaltado fluorescente** amarillo
    `#FFFF00`: arrastrando sobre la hoja o buscando un texto. Se dibuja en modo "multiplicar", así el texto sigue legible.
 4. **Foliación**: "FOLIO: 001" arriba a la derecha de cada hoja con doble borde rojo, respetando las hojas giradas.

@@ -74,7 +74,7 @@ function header() {
       <a class="nav-link-wide" href="unir-pdf.html">Unir PDF</a>
       <a class="nav-link-wide" href="dividir-pdf.html">Dividir PDF</a>
       <a class="nav-link-wide" href="comprimir-pdf.html">Comprimir PDF</a>
-      <button class="nav-all" type="button" aria-expanded="false" aria-controls="mega">Todas las herramientas ${icon('chevron-down')}</button>
+      <button class="nav-all" type="button" aria-expanded="false" aria-controls="mega" aria-label="Todas las herramientas"><span class="nav-all-icon">${icon('menu')}</span><span class="nav-all-full">Todas las herramientas</span><span class="nav-all-short">Herramientas</span> ${icon('chevron-down', 'nav-all-chevron')}</button>
       <a class="btn btn-brand sm" href="index.html#planes">Hazte Pro</a>
     </nav>
   </div>

@@ -3,10 +3,11 @@
 // resaltado fluorescente, carátula, índice de anexos y foliación "FOLIO: 001".
 // Todo se arma en el Web Worker (assets/workers/expediente-core.js): nada se sube a internet.
 import {
-  readBytes, openPdfjs, renderPage, freeCanvas, parseRanges, baseName, fmtSize, getSortable, textSpan,
+  readBytes, openPdfjs, renderPage, freeCanvas, parseRanges, rangesToSet, setToRanges, baseName, fmtSize, getSortable, textSpan,
 } from '../lib.js';
 import { h, field, segmented, iconEl, toast, modal } from '../ui.js';
 import { buildExpediente, anexoLabel } from '../pdf-engine.js';
+import { mountPages } from '../pages-view.js';
 
 let ui = null;   // estado de la vista (se recrea en cada mountView)
 let seq = 0;
@@ -179,13 +180,205 @@ async function openHighlighter(item, onDone) {
 
 /* ---------- Vista ---------- */
 
+// Etiquetas: automáticas (ANEXO 1-A, 1-B… o 1, 2, 3…), salvo que el usuario escriba una propia.
+// Una automática siempre continúa desde la anterior: si pones "ANEXO 1-C" a mano, la siguiente
+// es 1-D (útil si el escrito ya cita esos anexos y quitaste otros).
+const toNum = (letters) => [...letters].reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0);
+const toLetters = (n) => { let s = ''; for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
+function nextLabel(prev) {
+  const m = /^(.*?)(\d+)-([A-Z]+)$/.exec(prev);
+  if (m) return `${m[1]}${m[2]}-${toLetters(toNum(m[3]) + 1)}`;
+  const n = /^(.*?)(\d+)$/.exec(prev);
+  return n ? `${n[1]}${Number(n[2]) + 1}` : null;
+}
+function computeLabels(list) {
+  const map = new Map();
+  let prev = null;
+  list.forEach((it, i) => {
+    const label = it.customLabel || (prev && nextLabel(prev)) || anexoLabel(i, { style: ui.ctx.opts.labelStyle, number: ui.ctx.opts.labelNumber });
+    map.set(it, label);
+    prev = label;
+  });
+  return map;
+}
 function labels() {
-  const opts = { style: ui.ctx.opts.labelStyle, number: ui.ctx.opts.labelNumber };
-  ui.items.forEach((it, i) => { it.label = anexoLabel(i, opts); });
+  const map = computeLabels(ui.items);
+  ui.items.forEach((it) => { it.label = map.get(it); });
 }
 
+function editLabel(item, badge) {
+  const input = h('input.input.exp-label-input', { type: 'text', value: item.label, maxlength: 40, 'aria-label': 'Etiqueta del anexo' });
+  let finished = false;
+  const done = (save) => {
+    if (finished) return;   // Enter quita el campo y eso dispara también "blur"
+    finished = true;
+    if (save) {
+      const v = input.value.trim().replace(/\s+/g, ' ').toUpperCase();
+      item.customLabel = '';
+      const auto = computeLabels(ui.items).get(item);
+      item.customLabel = v && v !== auto ? v : '';   // vacío o igual a la automática: vuelve a ser automática
+    }
+    input.replaceWith(badge);
+    relabel();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); done(true); }
+    if (e.key === 'Escape') done(false);
+  });
+  input.addEventListener('blur', () => done(true), { once: true });
+  badge.replaceWith(input);
+  input.select();
+}
+
+/* ---------- Separar anexos de un documento (miniaturas) ---------- */
+
+// Para un archivo: marca páginas, crea anexos (uno con lo marcado o uno por página), quita
+// los que no sirvan y aplica. En el escrito principal, las páginas que pasan a anexos salen
+// del escrito. Las páginas que no quedan en ningún lado simplemente no se usan.
+async function openSplitter(entry, { fromMain = false } = {}) {
+  const groups = ui.items.filter((it) => it.entry === entry).map((it) => ({ item: it, pages: safePages(it) }));
+  let mainPages = fromMain && ui.main ? new Set(safePages(ui.main)) : null;
+
+  const gridHost = h('div.split-grid', {}, h('div.loading', {}, h('span.spinner'), 'Cargando páginas…'));
+  const chips = h('div.split-groups');
+  const rangeInput = h('input.input#split-range', { type: 'text', inputmode: 'numeric', placeholder: 'Ej: 11-15', 'aria-label': 'Páginas marcadas' });
+  const info = h('p.field-hint', { 'aria-live': 'polite' });
+  const createOne = h('button.btn.btn-brand.sm#split-one', { type: 'button' }, iconEl('plus'), 'Crear un anexo con lo marcado');
+  const createEach = h('button.btn.btn-ghost.sm#split-each', { type: 'button' }, iconEl('copy-plus'), 'Un anexo por cada página');
+  const asMain = fromMain ? h('button.btn.btn-ghost.sm#split-main', { type: 'button' }, iconEl('file-text'), 'Usar lo marcado como escrito') : null;
+  const body = h('div.split', {},
+    h('p.field-hint', {}, fromMain
+      ? 'Marca las páginas de cada anexo que trae tu escrito y créalos. Esas páginas salen del escrito. Quita con × los anexos que no te sirvan.'
+      : 'Marca las páginas que te sirven y crea uno o varios anexos con ellas. Las páginas que no uses no se incluyen.'),
+    h('div.split-bar', {}, field('Páginas marcadas', rangeInput), h('div.split-actions', {}, createOne, createEach, asMain)),
+    info,
+    chips,
+    gridHost);
+  const dlg = modal({
+    title: `Separar anexos · ${entry.name}`,
+    body,
+    actions: [
+      h('button.btn.btn-ghost', { type: 'button', onclick: () => dlg.close() }, 'Cancelar'),
+      h('button.btn.btn-brand#split-apply', { type: 'button', onclick: () => { apply(); dlg.close(); } }, iconEl('check'), 'Aplicar'),
+    ],
+    onClose: () => view?.destroy(),
+  });
+  dlg.dialog.classList.add('modal-wide');
+
+  let view = null;
+  try {
+    view = await mountPages(gridHost, entry, { select: 'keep', onChange: () => { syncInput(); } });
+  } catch (err) {
+    gridHost.replaceChildren(h('p.field-status.is-error', {}, err.message || 'No se pudo leer el PDF.'));
+    return;
+  }
+  const total = view.numPages;
+  // El anexo con el documento completo (el que se crea al subirlo) se reemplaza por los que
+  // armes aquí: las páginas que no elijas no se usan.
+  for (const g of groups) g.whole = g.pages.length === total;
+
+  // Cómo quedaría la lista de anexos si se aplica ahora (para mostrar las etiquetas reales).
+  function simulate() {
+    const placeholders = groups.map((g) => g.item || g);
+    const others = ui.items.filter((it) => it.entry !== entry);
+    // Van donde estaba el primer anexo de este archivo; si no había, los del escrito van
+    // al principio (suelen ser los primeros anexos) y los de otro archivo, al final.
+    const firstAt = ui.items.findIndex((it) => it.entry === entry);
+    const at = firstAt >= 0 ? ui.items.slice(0, firstAt).filter((it) => it.entry !== entry).length : (fromMain ? 0 : others.length);
+    return [...others.slice(0, at), ...placeholders, ...others.slice(at)];
+  }
+  const labelMap = () => computeLabels(simulate());
+  function paintTags() {
+    const map = labelMap();
+    const byPage = new Map();
+    for (const g of groups) for (const n of g.pages) byPage.set(n, map.get(g.item || g));
+    for (const p of view.pages) {
+      let tag = p.el.querySelector('.ptag');
+      const text = byPage.get(p.index + 1) || (mainPages?.has(p.index + 1) ? 'ESCRITO' : '');
+      if (!text) { tag?.remove(); continue; }
+      if (!tag) { tag = h('span.ptag'); p.el.append(tag); }
+      tag.textContent = text;
+      tag.classList.toggle('is-main', text === 'ESCRITO');
+    }
+    chips.replaceChildren(...groups.map((g) => h('span.split-chip', {},
+      h('strong', {}, map.get(g.item || g)), ` p. ${setToRanges(new Set(g.pages))}`,
+      h('button.icon-btn.sm', {
+        type: 'button', title: 'Quitar este anexo', 'aria-label': `Quitar ${map.get(g.item || g)}`,
+        onclick: () => { groups.splice(groups.indexOf(g), 1); paintTags(); },
+      }, iconEl('x')))));
+    if (!groups.length) chips.append(h('span.field-hint', {}, 'Todavía no hay anexos de este documento.'));
+    const unused = total - new Set([...groups.flatMap((g) => g.pages), ...(mainPages || [])]).size;
+    info.textContent = `${groups.length} ${groups.length === 1 ? 'anexo' : 'anexos'} de este documento${mainPages ? ` · escrito: ${mainPages.size ? `p. ${setToRanges(mainPages)}` : 'sin páginas'}` : ''}${unused > 0 ? ` · ${unused} ${unused === 1 ? 'página no se usará' : 'páginas no se usarán'}` : ''}.`;
+  }
+  function syncInput() {
+    const set = view.selectedNumbers();
+    if (document.activeElement !== rangeInput) rangeInput.value = setToRanges(set);
+    createOne.disabled = createEach.disabled = !set.size;
+    if (asMain) asMain.disabled = !set.size;
+  }
+  rangeInput.addEventListener('input', () => {
+    const text = rangeInput.value.trim();
+    try {
+      view.setSelection(text ? rangesToSet(parseRanges(text, total)) : new Set());
+      rangeInput.classList.remove('is-invalid');
+    } catch { rangeInput.classList.add('is-invalid'); }
+  });
+  const take = () => {
+    const sel = [...view.selectedNumbers()].sort((a, b) => a - b);
+    if (!sel.length) return null;
+    // Una página pertenece a un solo anexo: se quita de los anteriores (y del escrito).
+    for (let i = groups.length - 1; i >= 0; i--) if (groups[i].whole) groups.splice(i, 1);
+    for (const g of groups) g.pages = g.pages.filter((n) => !sel.includes(n));
+    for (let i = groups.length - 1; i >= 0; i--) if (!groups[i].pages.length) groups.splice(i, 1);
+    if (mainPages) for (const n of sel) mainPages.delete(n);
+    view.setSelection(new Set());
+    return sel;
+  };
+  createOne.addEventListener('click', () => { const sel = take(); if (sel) { groups.push({ pages: sel }); paintTags(); } });
+  createEach.addEventListener('click', () => { const sel = take(); if (sel) { sel.forEach((n) => groups.push({ pages: [n] })); paintTags(); } });
+  asMain?.addEventListener('click', () => {
+    const sel = [...view.selectedNumbers()];
+    for (const g of groups) g.pages = g.pages.filter((n) => !sel.includes(n));
+    for (let i = groups.length - 1; i >= 0; i--) if (!groups[i].pages.length) groups.splice(i, 1);
+    mainPages = new Set(sel);
+    view.setSelection(new Set());
+    paintTags();
+  });
+
+  function apply() {
+    const base = prettyName(entry.name);
+    for (const g of groups) {
+      const range = setToRanges(new Set(g.pages));
+      if (g.item) {
+        if (g.item.range !== range) { g.item.range = range; g.item.highlights = keepHighlights(g.item.highlights, g.pages); }
+      } else {
+        g.item = makeItem(entry, { total, range, title: `${base} (p. ${range})` });
+      }
+    }
+    ui.items = simulate();
+    if (fromMain && ui.main) {
+      if (mainPages.size) ui.main.range = mainPages.size === total ? '' : setToRanges(mainPages);
+      else {
+        ui.main = null;
+        toast('Todas las páginas pasaron a anexos: el expediente quedará sin escrito principal.');
+      }
+    }
+    syncFiles();
+    render();
+    if (groups.length) toast(`Listo: ${groups.length} ${groups.length === 1 ? 'anexo' : 'anexos'} de "${entry.name}".`);
+  }
+
+  paintTags();
+  syncInput();
+}
+
+const safePages = (item) => { try { return pagesOf(item) || []; } catch { return []; } };
+// Al cambiar las páginas de un anexo, se conservan solo los resaltados de las páginas que siguen.
+const keepHighlights = (hl, pages) => Object.fromEntries(Object.entries(hl).filter(([n]) => pages.includes(Number(n))));
+
 function itemCard(item) {
-  const badge = h('span.exp-label', {}, item.label);
+  const badge = h('button.exp-label', { type: 'button', title: 'Toca para cambiar la etiqueta' }, item.label);
+  badge.addEventListener('click', () => editLabel(item, badge));
   const info = h('span.exp-file-meta', {}, fmtSize(item.entry.size));
   const thumb = h('div.exp-thumb', {}, h('span.spinner.sm'));
   const rangeInput = h('input.input.exp-range', { type: 'text', inputmode: 'numeric', placeholder: 'Todas', value: item.range, 'aria-label': `Páginas de ${item.label}` });
@@ -232,10 +425,11 @@ function itemCard(item) {
             h('button.btn.btn-ghost.sm.exp-hl-btn', { type: 'button', onclick: () => openHighlighter(item, updateHl) }, iconEl('highlighter'), 'Resaltar'),
             hlCount))),
         h('div.exp-actions', {},
+          h('button.linklike.exp-split', { type: 'button', onclick: () => openSplitter(item.entry) }, iconEl('scissors'), 'Separar en varios anexos (ver páginas)'),
           h('button.linklike', { type: 'button', onclick: () => duplicate(item) }, iconEl('copy-plus'), 'Extraer otras páginas como nuevo anexo'),
           ui.main ? null : h('button.linklike', { type: 'button', onclick: () => makeMain(item) }, iconEl('file-text'), 'Es el escrito principal')))));
 
-  item.refresh = () => { badge.textContent = item.label; updateRange(); updateHl(); };
+  item.refresh = () => { badge.textContent = item.label; badge.classList.toggle('is-custom', Boolean(item.customLabel)); updateRange(); updateHl(); };
   ui.ctx.info(item.entry).then((meta) => {
     item.total = meta.pages || null;
     if (meta.locked) { card.classList.add('is-error'); info.textContent = 'Tiene contraseña: quítasela con "Desbloquear PDF"'; }
@@ -287,7 +481,10 @@ function mainCard() {
       h('span.exp-label.is-main', {}, 'ESCRITO'),
       h('span.exp-file', {}, h('span.exp-file-name', { title: m.entry.name }, m.entry.name), info),
       h('button.btn.btn-ghost.sm', { type: 'button', title: 'Pasarlo a la lista de anexos', onclick: () => demoteMain() }, 'No es el escrito')),
-    h('div.exp-item-body', {}, thumb, h('div.exp-fields', {}, field('Páginas a incluir', h('div', {}, rangeInput, rangeStatus)))));
+    h('div.exp-item-body', {}, thumb, h('div.exp-fields', {},
+      field('Páginas del escrito', h('div', {}, rangeInput, rangeStatus)),
+      h('div.exp-actions', {},
+        h('button.btn.btn-ghost.sm.exp-split-main', { type: 'button', onclick: () => openSplitter(m.entry, { fromMain: true }) }, iconEl('scissors'), '¿Trae anexos? Sepáralos y quita los que no sirvan')))));
 }
 
 let sortable;
@@ -475,6 +672,12 @@ export default {
 
   validate(ctx) {
     if (!ui || (!ui.main && !ui.items.length)) return 'Agrega el escrito principal o al menos un medio probatorio.';
+    labels();
+    const seen = new Set();
+    for (const it of ui.items) {
+      if (seen.has(it.label)) return `Hay dos anexos con la etiqueta "${it.label}". Toca una de ellas para cambiarla.`;
+      seen.add(it.label);
+    }
     for (const p of [ui.main, ...ui.items].filter(Boolean)) {
       if (!p.total) return `Todavía estamos leyendo "${p.entry.name}" (o no se puede abrir). Espera un momento o quítalo.`;
       try { if (!pagesOf(p).length) return `Elige al menos una página de "${p.entry.name}".`; } catch (err) { return `${p.label || 'Escrito'}: ${err.message}`; }
