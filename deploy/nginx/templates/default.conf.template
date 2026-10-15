@@ -1,0 +1,115 @@
+# nginx para Maus / DocuMaus. La imagen oficial reemplaza ${DOMAIN} al arrancar.
+# Sirve la web estática y pasa /api y /webhook al contenedor rolly_api.
+# (Sin "listen [::]": Docker ya reenvía al contenedor el tráfico IPv6 que llega al servidor.)
+
+upstream rolly_api {
+    server rolly_api:3000;
+    keepalive 16;
+}
+
+# Límite de pedidos a la API por IP (el webhook de Meta no pasa por aquí).
+limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+
+# Caché según el tipo de archivo (un solo add_header: evita el problema de herencia de nginx).
+map $uri $cache_control {
+    ~^/vendor/          "public, max-age=31536000, immutable";
+    ~^/assets/css/      "public, max-age=31536000, immutable";
+    ~^/assets/img/      "public, max-age=604800";
+    default             "no-cache";
+}
+
+# Los módulos .mjs (pdf.js) deben llegar como JavaScript o el navegador los rechaza.
+types {
+    text/javascript mjs;
+    application/manifest+json webmanifest;
+}
+
+# ---------- HTTP: solo validación de Let's Encrypt y redirección a HTTPS ----------
+server {
+    listen 80;
+    server_name ${DOMAIN} www.${DOMAIN};
+    server_tokens off;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+    }
+    location / {
+        return 301 https://${DOMAIN}$request_uri;
+    }
+}
+
+# ---------- www → dominio principal ----------
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name www.${DOMAIN};
+    server_tokens off;
+    include /etc/nginx/snippets/ssl.conf;
+    return 301 https://${DOMAIN}$request_uri;
+}
+
+# ---------- Sitio principal ----------
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+    server_tokens off;
+    include /etc/nginx/snippets/ssl.conf;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Documentos de hasta 100 MB.
+    client_max_body_size 100M;
+    client_body_timeout 120s;
+
+    # Compresión gzip (el wasm y los JS grandes bajan mucho).
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/json
+               application/manifest+json application/xml image/svg+xml application/wasm;
+
+    # Cabeceras de seguridad (en todas las respuestas).
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()" always;
+    add_header Cache-Control $cache_control always;
+
+    # API (estadísticas anónimas, salud, administración).
+    location /api/ {
+        limit_req zone=api burst=30 nodelay;
+        limit_req_status 429;
+        proxy_pass http://rolly_api;
+        include /etc/nginx/snippets/proxy.conf;
+    }
+
+    # Webhook de WhatsApp Cloud API (Meta). El cuerpo llega intacto para validar la firma.
+    location = /webhook/whatsapp {
+        client_max_body_size 2m;
+        proxy_pass http://rolly_api;
+        include /etc/nginx/snippets/proxy.conf;
+    }
+
+    # Nunca exponer archivos ocultos (.env, .git…).
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # El service worker debe revisarse siempre.
+    location = /sw.js {
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    error_page 404 /404.html;
+}

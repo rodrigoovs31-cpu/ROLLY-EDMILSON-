@@ -1,14 +1,20 @@
 // Configuración de tu marca.
 // Cambia estos valores y guarda: la web los toma automáticamente.
-// (Si cambias "name" o "url", vuelve a generar las páginas con: npm run build)
+// (Si cambias "name", vuelve a generar las páginas con: npm run build)
+import { ENV } from './env.js';
 
 export const SITE = {
   name: 'Maus',
   tagline: 'Herramientas PDF gratis en español',
 
-  // Dominio final de la web, sin barra al final. Ej: 'https://maus.pe'
-  // Se usa para SEO (sitemap.xml y enlaces canónicos).
-  url: 'https://rodrigoovs31-cpu.github.io/ROLLY-EDMILSON-',
+  // Dominio final de la web (canónicas, sitemap y enlaces para compartir).
+  // NO se escribe aquí: se define al publicar, así sirve para cualquier dominio:
+  //   SITE_URL=https://tudominio.com npm run build
+  url: ENV.siteUrl,
+
+  // API del servidor (estadísticas anónimas de uso). Vacío en hosting estático.
+  //   API_BASE=/api npm run build
+  api: ENV.apiBase,
 
   // Tu WhatsApp con código de país, solo números. Ej: '51987654321'
   // Si lo dejas vacío, los botones de WhatsApp no se muestran.

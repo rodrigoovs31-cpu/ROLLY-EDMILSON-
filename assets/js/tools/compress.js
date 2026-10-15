@@ -1,7 +1,8 @@
 import {
-  readBytes, getPdfLib, pdfBlob, baseName, fmtSize, runQpdf, openPdfjs, renderPage,
+  readBytes, getPdfLib, pdfBlob, baseName, fmtSize, openPdfjs, renderPage,
   canvasToBlob, freeCanvas, yieldUI, UserError,
 } from '../lib.js';
+import { optimizePdf } from '../pdf-engine.js';
 import { h, field } from '../ui.js';
 
 const LEVELS = {
@@ -12,16 +13,6 @@ const TARGET_STEPS = [
   { scale: 1.6, quality: 0.7 }, { scale: 1.4, quality: 0.6 }, { scale: 1.2, quality: 0.5 },
   { scale: 1.0, quality: 0.45 }, { scale: 0.85, quality: 0.35 }, { scale: 0.7, quality: 0.3 },
 ];
-
-async function lossless(bytes) {
-  const { code, read } = await runQpdf([
-    '--object-streams=generate', '--compress-streams=y', '--recompress-flate',
-    '--compression-level=9', '/in.pdf', '/out.pdf',
-  ], { '/in.pdf': bytes });
-  const out = read('/out.pdf');
-  if (code === 2 || !out) return null;
-  return out;
-}
 
 async function rasterize(doc, { scale, quality }, onPage) {
   const { PDFDocument } = await getPdfLib();
@@ -81,22 +72,25 @@ export default {
     const n = ctx.files.length;
     for (const [fi, entry] of ctx.files.entries()) {
       const label = n > 1 ? `Archivo ${fi + 1} de ${n}: ` : '';
-      const original = await readBytes(entry.file);
+      // El original se queda como File (no se copia a memoria si no hace falta).
+      const original = entry.file;
       let best = original;
+      let bestSize = original.size;
       let note = '';
-      const consider = (bytes) => { if (bytes && bytes.length < best.length) best = bytes; };
+      const consider = (bytes) => { if (bytes && bytes.length < bestSize) { best = bytes; bestSize = bytes.length; } };
 
+      // Limpieza y recompresión de streams sin pérdida: corre en el Web Worker (qpdf).
       ctx.progress(fi / n, `${label}optimizando…`);
-      const clean = await lossless(original);
+      const clean = await optimizePdf(original, (v) => ctx.progress((fi + v * 0.1) / n, `${label}limpiando y recomprimiendo…`));
       consider(clean);
 
       if (ctx.opts.level !== 'basic') {
-        const doc = await openPdfjs(clean || original);
+        const doc = await openPdfjs(clean || await readBytes(original));
         const target = ctx.opts.level === 'target' ? ctx.opts.targetMb * 1024 * 1024 : 0;
         const steps = target ? TARGET_STEPS : LEVELS[ctx.opts.level];
         try {
           for (const [si, step] of steps.entries()) {
-            if (target && best.length <= target) break;
+            if (target && bestSize <= target) break;
             const bytes = await rasterize(doc, step, (page) => {
               ctx.progress((fi + (si + page / doc.numPages) / steps.length) / n,
                 `${label}comprimiendo página ${page} de ${doc.numPages}${target && si ? ` (intento ${si + 1})` : ''}…`);
@@ -106,15 +100,15 @@ export default {
         } finally {
           doc.destroy();
         }
-        if (target && best.length > target) note = `No se pudo bajar de ${fmtSize(best.length)} sin que el documento quede ilegible.`;
+        if (target && bestSize > target) note = `No se pudo bajar de ${fmtSize(bestSize)} sin que el documento quede ilegible.`;
       }
 
       if (best === original) note ||= 'Este PDF ya estaba optimizado; no se pudo reducir más.';
-      const saved = 1 - best.length / original.length;
-      results.push({ name: `${baseName(entry.name)}-comprimido.pdf`, blob: pdfBlob(best) });
+      const saved = 1 - bestSize / original.size;
+      results.push({ name: `${baseName(entry.name)}-comprimido.pdf`, blob: best === original ? new Blob([original], { type: 'application/pdf' }) : pdfBlob(best) });
       rows.push(h('li', {},
         h('span.cmp-name', {}, entry.name),
-        h('span.cmp-sizes', {}, `${fmtSize(original.length)} → `, h('strong', {}, fmtSize(best.length)),
+        h('span.cmp-sizes', {}, `${fmtSize(original.size)} → `, h('strong', {}, fmtSize(bestSize)),
           saved > 0.005 ? h('span.badge.ok', {}, `−${Math.round(saved * 100)}%`) : null),
         note ? h('span.cmp-note', {}, note) : null));
     }

@@ -1,0 +1,12 @@
+# Solo entra al build lo que el Dockerfile necesita.
+.git
+.github
+**/node_modules
+server/dist
+web-dist
+.env
+.env.*
+!.env.example
+deploy/certbot
+*.log
+**/.DS_Store

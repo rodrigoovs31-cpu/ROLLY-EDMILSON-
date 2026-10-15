@@ -1,5 +1,6 @@
 // Controlador común de cada página de herramienta:
 // elegir archivos → ajustar opciones → procesar → descargar.
+import { SITE } from './config.js';
 import { toolById, FLOWS, CONTINUE_WITH } from './tools-data.js';
 import { $, h, iconEl, toast } from './ui.js';
 import { loadPro, isPro, requirePro, freeLimit, openProModal } from './pro.js';
@@ -31,7 +32,28 @@ const el = {
   busy: $('#busy'),
   busyLabel: $('#busy-label'),
   busyBar: $('#busy-bar'),
+  busyProgress: $('#busy-progress'),
+  busyPct: $('#busy-pct'),
 };
+
+// Barra de progreso suave: se anima con transform (sin recalcular el diseño) en cada cuadro,
+// así avanza fluida a 60 FPS mientras el Web Worker procesa en otro hilo.
+const bar = { target: 0, shown: 0, raf: 0 };
+function paintBar() {
+  bar.shown += (bar.target - bar.shown) * 0.2;
+  if (Math.abs(bar.target - bar.shown) < 0.001) bar.shown = bar.target;
+  const pct = Math.round(bar.shown * 100);
+  el.busyBar.style.transform = `scaleX(${bar.shown})`;
+  if (el.busyPct) el.busyPct.textContent = `${pct}%`;
+  el.busyProgress?.setAttribute('aria-valuenow', String(pct));
+  bar.raf = bar.shown === bar.target ? 0 : requestAnimationFrame(paintBar);
+}
+function resetBar() {
+  cancelAnimationFrame(bar.raf);
+  bar.raf = 0;
+  bar.target = bar.shown = 0;
+  paintBar();
+}
 
 const ACCEPT = {
   pdf: { attr: 'application/pdf,.pdf', test: isPdf, msg: 'Solo se aceptan archivos PDF.' },
@@ -64,7 +86,10 @@ const ctx = {
   optionsEl: el.options,
   progress(fraction, label) {
     if (label) el.busyLabel.textContent = label;
-    if (fraction != null) el.busyBar.style.width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%`;
+    if (fraction != null && Number.isFinite(fraction)) {
+      bar.target = Math.min(1, Math.max(0, fraction));
+      bar.raf ||= requestAnimationFrame(paintBar);
+    }
   },
   pickFiles: () => el.input.click(),
   refresh: () => renderView(),
@@ -318,11 +343,14 @@ el.run.addEventListener('click', async () => {
     return;
   }
   el.busy.hidden = false;
+  resetBar();
   ctx.progress(0, mod.busyLabel || 'Procesando…');
   await yieldUI();
+  const started = performance.now();
   try {
     const result = await mod.run(ctx);
     ctx.progress(1);
+    reportJob(tool.id, ctx.files, result, performance.now() - started);
     await showDone(result);
   } catch (err) {
     report(err);
@@ -330,6 +358,63 @@ el.run.addEventListener('click', async () => {
     el.busy.hidden = true;
   }
 });
+
+// Estadística anónima (solo si la web corre en nuestro servidor con API_BASE):
+// herramienta, pesos y tiempo. Nunca el archivo ni su nombre.
+function reportJob(action, inputs, result, ms) {
+  if (!SITE.api) return;
+  try {
+    const body = JSON.stringify({
+      action,
+      file_size_in: inputs.reduce((sum, f) => sum + (f.size || 0), 0),
+      file_size_out: (result.files || []).reduce((sum, f) => sum + (f.blob?.size || 0), 0),
+      processing_time_ms: Math.round(ms),
+    });
+    const url = `${SITE.api}/jobs`;
+    if (!navigator.sendBeacon?.(url, new Blob([body], { type: 'application/json' }))) {
+      fetch(url, { method: 'POST', body, headers: { 'content-type': 'application/json' }, keepalive: true }).catch(() => {});
+    }
+  } catch { /* las estadísticas nunca deben romper la herramienta */ }
+}
+
+// "📲 Enviar este documento a mi WhatsApp".
+// En celulares (Android, iPhone) comparte el ARCHIVO con la hoja de compartir del sistema:
+// eliges WhatsApp y tu propio chat. Donde eso no existe (computadoras), el enlace
+// wa.me/?text= abre WhatsApp con el mensaje listo y descargamos el archivo para adjuntarlo,
+// porque un enlace de WhatsApp no puede llevar archivos.
+function whatsappShare(main, files) {
+  const pageUrl = SITE.url ? `${SITE.url}/${tool.id}.html` : new URL(`${tool.id}.html`, document.baseURI).href;
+  const text = `📄 ${main.name} (${fmtSize(main.blob.size)})\nListo con ${SITE.name}, herramientas PDF gratis: ${pageUrl}`;
+  const href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const list = files.length > 1 && files.length <= 10 ? files : [main];
+  const shareFiles = list.map((f) => new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' }));
+  let canShareFiles = false;
+  try { canShareFiles = !!navigator.canShare?.({ files: shareFiles }); } catch { canShareFiles = false; }
+
+  const btn = h('a.btn.btn-wa.btn-lg#send-whatsapp', {
+    href, target: '_blank', rel: 'noopener',
+    'data-share': canShareFiles ? 'files' : 'link',
+    onclick: async (event) => {
+      if (canShareFiles) {
+        event.preventDefault();
+        try {
+          await navigator.share({ files: shareFiles, title: main.name, text: `Listo con ${SITE.name}` });
+        } catch (err) {
+          if (err?.name === 'AbortError') return;  // el usuario cerró la hoja de compartir
+          downloadBlob(main.blob, main.name);
+          window.open(href, '_blank', 'noopener');
+        }
+        return;
+      }
+      downloadBlob(main.blob, main.name);
+      toast('Descargamos tu archivo. En WhatsApp tócale 📎 para adjuntarlo.');
+    },
+  }, '📲 Enviar este documento a mi WhatsApp');
+  return h('div.wa-share', {}, btn,
+    h('p.wa-hint', {}, canShareFiles
+      ? 'Elige WhatsApp y luego tu propio chat ("Tú") para guardarlo o reenviarlo.'
+      : 'Se abre WhatsApp con el mensaje listo; adjunta con 📎 el archivo que se descarga.'));
+}
 
 function report(err) {
   if (!(err instanceof UserError)) console.error(err);
@@ -355,7 +440,7 @@ async function showDone(result) {
   if (main) {
     const btn = h('button.btn.btn-brand.btn-xl', { type: 'button', id: 'download', onclick: () => downloadBlob(main.blob, main.name) },
       iconEl('download'), files.length > 1 ? `Descargar ZIP (${files.length} archivos)` : 'Descargar');
-    box.append(btn, h('p.done-file', {}, `${main.name} · ${fmtSize(main.blob.size)}`));
+    box.append(btn, h('p.done-file', {}, `${main.name} · ${fmtSize(main.blob.size)}`), whatsappShare(main, files));
     if (files.length > 1 && files.length <= 30) {
       box.append(h('details.done-list', {},
         h('summary', {}, 'Descargar archivos por separado'),

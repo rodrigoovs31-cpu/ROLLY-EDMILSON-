@@ -1,4 +1,5 @@
-import { loadPdfDoc, readBytes, getPdfLib, pdfBlob, baseName } from '../lib.js';
+import { baseName } from '../lib.js';
+import { extractPages } from '../pdf-engine.js';
 import { h } from '../ui.js';
 import { rangeField } from './_select.js';
 
@@ -29,23 +30,18 @@ export default {
     return ctx.pages.selectedNumbers().size ? null : 'Marca al menos una página para extraer.';
   },
 
+  // Corre en el Web Worker.
   async run(ctx) {
-    const { PDFDocument } = await getPdfLib();
-    const src = await loadPdfDoc(await readBytes(ctx.files[0].file));
     const base = baseName(ctx.files[0].name);
     const nums = [...ctx.pages.selectedNumbers()].sort((a, b) => a - b);
-    const build = async (list) => {
-      const out = await PDFDocument.create();
-      (await out.copyPages(src, list.map((n) => n - 1))).forEach((p) => out.addPage(p));
-      return pdfBlob(await out.save());
-    };
+    const groups = ctx.opts.separate ? nums.map((n) => [n]) : [nums];
+    const blobs = await extractPages(ctx.files[0].file, groups, (value, label) => ctx.progress(value, label));
     if (ctx.opts.separate) {
-      const files = [];
-      for (const n of nums) files.push({ name: `${base}-pagina-${n}.pdf`, blob: await build([n]) });
+      const files = nums.map((n, i) => ({ name: `${base}-pagina-${n}.pdf`, blob: blobs[i] }));
       return { files, zipName: `${base}-paginas.zip`, summary: `Extrajiste ${nums.length} ${nums.length === 1 ? 'página' : 'páginas'}.` };
     }
     return {
-      files: [{ name: `${base}-extracto.pdf`, blob: await build(nums) }],
+      files: [{ name: `${base}-extracto.pdf`, blob: blobs[0] }],
       summary: `Tu nuevo PDF tiene ${nums.length} ${nums.length === 1 ? 'página' : 'páginas'}.`,
     };
   },

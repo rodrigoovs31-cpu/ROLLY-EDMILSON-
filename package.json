@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "start": "python3 -m http.server 8080"
+    "start": "python3 -m http.server 8080",
+    "export": "node scripts/export-web.mjs",
+    "build:prod": "node scripts/build.mjs && node scripts/export-web.mjs web-dist"
   }
 }

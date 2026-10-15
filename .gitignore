@@ -1,2 +1,10 @@
 node_modules/
 .DS_Store
+# Secretos y archivos generados (nunca al repositorio)
+.env
+.env.*
+!.env.example
+web-dist/
+server/dist/
+deploy/certbot/
+*.log

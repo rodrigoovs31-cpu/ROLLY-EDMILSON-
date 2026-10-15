@@ -73,10 +73,13 @@ Si el PDF ya tiene una firma digital, Maus no lo vuelve a firmar para no invalid
 3. **Colores**: al inicio de `assets/css/maus.css` (bloque `:root`). El amarillo de la marca es `--brand`.
 4. **Textos de cada herramienta**: `assets/js/tools-data.js`.
 
-Si cambias el **nombre**, el **dominio** (`url` en config.js) o los textos de `tools-data.js`, vuelve a generar las páginas:
+Si cambias el **nombre** o los textos de `tools-data.js`, vuelve a generar las páginas.
+El **dominio** ya no se escribe en el código: se pasa al generar, así la misma web sirve para cualquier dominio
+(canónicas, `sitemap.xml`, `robots.txt` y enlaces para compartir):
 
 ```bash
-npm run build
+SITE_URL=https://tudominio.com npm run build     # con tu dominio (recomendado para Google)
+npm run build                                    # sin dominio: enlaces relativos, sin canónicas ni sitemap
 ```
 
 ## Verla en tu computadora
@@ -108,17 +111,103 @@ unos 30 KB comprimidos por visita. Si jsDelivr fallara, la web usa sola la copia
 **Cloudflare Pages (recomendado para millones de visitas)**
 1. Crea una cuenta gratis en Cloudflare y entra a *Workers & Pages → Create → Pages → Connect to Git*.
 2. Elige este repositorio y la rama `main`.
-3. *Framework preset*: **None**. *Build command*: déjalo vacío. *Build output directory*: `/`.
-4. Guarda. Cada vez que se actualice `main`, la web se publica sola.
-5. Pon la dirección que te den (`https://ALGO.pages.dev` o tu dominio) en `url` dentro de `config.js` y ejecuta `npm run build`.
+3. *Framework preset*: **None**.
+4. *Build command*: `npm run build && node scripts/export-web.mjs web-dist` · *Build output directory*: `web-dist`
+   (así solo se publica la web, no el código del servidor).
+5. En *Settings → Environment variables* agrega `SITE_URL` con tu dirección (`https://ALGO.pages.dev` o tu dominio).
+6. Guarda. Cada vez que se actualice `main`, la web se publica sola.
 
 El archivo `_headers` ya le dice a Cloudflare que guarde las librerías en caché un año.
 
 **Firebase Hosting** (si lo prefieres): `npm install -g firebase-tools`, `firebase login`,
 `firebase init hosting` (elige "usar firebase.json existente") y `firebase deploy`. El archivo `firebase.json` ya está listo.
 
-**Dominio propio** (por ejemplo `maus.pe`): cómpralo, conéctalo en Cloudflare, ponlo en `url` dentro de
-`config.js` y ejecuta `npm run build` para actualizar el `sitemap.xml` para Google.
+**Dominio propio** (por ejemplo `documaus.com`): cómpralo, conéctalo en Cloudflare y cambia la variable `SITE_URL`.
+
+## Producción en tu propio servidor (DigitalOcean / AWS) con WhatsApp
+
+La web sigue procesando todo en el navegador. El servidor agrega lo que un sitio estático no puede:
+el **asistente de WhatsApp** (el cliente envía un PDF al número de tu negocio y recibe el resultado),
+**PostgreSQL** (usuarios, planes y cupos, historial de trabajos) y **HTTPS** con tu dominio.
+
+```
+Internet ──► nginx (HTTPS, gzip, web estática, 100 MB)
+               ├── /             → web (procesa en el navegador)
+               ├── /api/*        → rolly_api (Node.js + TypeScript)
+               └── /webhook/whatsapp → rolly_api ──► PostgreSQL 16
+                                          └──► qpdf + Ghostscript (comprimir, proteger, unir) y PDF→Word
+```
+
+**Asistente de WhatsApp**: el cliente manda un PDF → recibe una lista con 1️⃣ Comprimir, 2️⃣ Proteger con
+contraseña, 3️⃣ Convertir a Word, 4️⃣ Unir con otro PDF → elige → recibe el documento en el mismo chat.
+Plan gratis con cupo mensual por número y plan **Pro WhatsApp** que activas tú después de cobrar.
+
+### Requisitos
+- Un servidor Ubuntu 24.04 con 2 GB de RAM (DigitalOcean "Basic" de 12 USD/mes o AWS Lightsail similar).
+- Un dominio con un registro **A** apuntando a la IP del servidor (y `www` si lo usas).
+- Una app de Meta con el producto **WhatsApp** y un número verificado ([developers.facebook.com](https://developers.facebook.com)).
+
+### Poner en marcha (comandos exactos)
+
+```bash
+# 1. En el servidor: Docker
+curl -fsSL https://get.docker.com | sh
+sudo ufw allow OpenSSH && sudo ufw allow 80 && sudo ufw allow 443 && sudo ufw --force enable
+
+# 2. El proyecto y tu configuración
+git clone https://github.com/rodrigoovs31-cpu/ROLLY-EDMILSON-.git maus && cd maus
+cp .env.example .env
+nano .env        # DOMAIN, LETSENCRYPT_EMAIL, POSTGRES_PASSWORD, META_*, PHONE_NUMBER_ID, ADMIN_API_TOKEN
+
+# 3. Levantar todo (PostgreSQL + API + nginx)
+docker compose up -d --build
+docker compose ps                     # los 3 deben decir "running" / "healthy"
+
+# 4. Certificado HTTPS gratis (solo la primera vez)
+./deploy/init-letsencrypt.sh
+
+# 5. Comprobar
+curl https://TU-DOMINIO/api/health    # {"ok":true,"db":true,...}
+```
+
+### Conectar WhatsApp (Meta)
+1. En tu app de Meta → **WhatsApp → Configuración → Webhook**:
+   URL de devolución de llamada `https://TU-DOMINIO/webhook/whatsapp` y como token de verificación
+   el mismo valor de `META_VERIFY_TOKEN`. Pulsa *Verificar y guardar*.
+2. Suscríbete al campo **messages**.
+3. Copia la **Clave secreta de la app** (Configuración → Básica) en `META_APP_SECRET`: con ella el servidor
+   comprueba que cada mensaje viene de verdad de Meta (firma `X-Hub-Signature-256`) y rechaza los falsos.
+4. Usa un **token permanente** de un usuario del sistema en `META_ACCESS_TOKEN` (el temporal vence en 24 h).
+5. `docker compose up -d` para aplicar los cambios del `.env`.
+
+### Cobrar el plan Pro WhatsApp
+Cuando un cliente te pague (Yape, Plin o transferencia), actívalo con su número:
+
+```bash
+curl -X POST https://TU-DOMINIO/api/admin/subscriptions/pro \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"phone_number":"51987654321","months":1}'
+curl -H "Authorization: Bearer $ADMIN_API_TOKEN" https://TU-DOMINIO/api/admin/stats?days=30
+```
+
+### Día a día
+```bash
+docker compose logs -f rolly_api                      # ver qué pasa
+git pull && docker compose up -d --build              # actualizar
+docker compose exec postgres pg_dump -U rolly rolly | gzip > respaldo-$(date +%F).sql.gz   # respaldo
+docker compose exec rolly_api node dist/scripts/create-admin.js tu@correo.com              # usuario admin
+```
+
+### Probar el servidor en tu computadora
+```bash
+cd server && npm install
+npm run typecheck
+TEST_DATABASE_URL=postgres://usuario@localhost:5432/rolly_test npm test   # webhook firmado + PostgreSQL + PDF reales
+```
+
+**Privacidad**: lo que se procesa en la web nunca sale del navegador. Lo que el cliente envía por WhatsApp sí
+pasa por tu servidor: se borra al terminar (o a los 30 minutos si no elige nada), la contraseña para proteger
+no se guarda y del mensaje solo queda el tipo. Está explicado en `privacidad.html` (Ley 29733).
 
 ## Cómo está hecha
 
@@ -133,18 +222,30 @@ assets/js/lib.js          Utilidades de PDF (lectura, giro de páginas, descarga
 assets/js/page-editor.js  Visor de páginas con elementos encima (Editar, Censurar, Recortar, Formularios)
 assets/js/text-layout.js  Lee títulos, párrafos y columnas del PDF (PDF a Word/Excel/Markdown, Traducir, Comparar)
 assets/js/render-html.js  Dibuja Word, PowerPoint y HTML como páginas PDF
+assets/js/pdf-engine.js   Cliente del Web Worker (unir, marca de agua, extraer, optimizar sin congelar la página)
+assets/workers/           El Web Worker y su núcleo pdf-core.js (con respaldo en la página si no hubiera worker)
 vendor/                   Copia de respaldo de las librerías (si jsDelivr no responde)
-scripts/build.mjs         Generador de páginas, sitemap y robots.txt
+scripts/build.mjs         Generador de páginas, sitemap y robots.txt (lee SITE_URL y API_BASE)
+scripts/export-web.mjs    Copia solo los archivos públicos a web-dist/ (lo que sirve nginx o Cloudflare)
+server/                   API Node.js + TypeScript: webhook de WhatsApp, PostgreSQL, motor PDF del servidor
+  src/server.ts           Arranque, migraciones, mantenimiento y apagado ordenado
+  src/whatsapp/           Webhook firmado, cola en PostgreSQL, conversación y cliente de la Graph API v21.0
+  src/engine/             qpdf, Ghostscript y PDF→Word en el servidor
+  src/db/schema.sql       Tablas users, pdf_jobs, whatsapp_sessions, subscriptions (+ cola whatsapp_events)
+  test/                   Pruebas con PostgreSQL real y una Graph API simulada
+Dockerfile                Imagen multi-etapa: target "api" (Node 22 Alpine) y "web" (nginx Alpine)
+docker-compose.yml        postgres:16-alpine + rolly_api + nginx + certbot
+deploy/                   Configuración de nginx y script de Let's Encrypt
 ```
 
 Para agregar una herramienta: añádela en `tools-data.js`, crea su archivo en `assets/js/tools/` (copia uno parecido)
 y ejecuta `npm run build`.
 
-## Mejoras opcionales con servidor (de pago)
+## Mejoras opcionales con servidor
 
-Todo funciona sin servidor. Si algún día quieres conversiones de Office con texto seleccionable y 100% idénticas
-(fuentes y diseños complejos), se puede agregar un servidor con LibreOffice, por ejemplo [Gotenberg](https://gotenberg.dev)
-en un VPS de 5 a 10 USD al mes, solo para esas herramientas.
+La web funciona sin servidor. Con el servidor de arriba ya tienes WhatsApp y base de datos. Si algún día quieres
+conversiones de Office 100% idénticas (fuentes y diseños complejos), se puede sumar [Gotenberg](https://gotenberg.dev)
+(LibreOffice) como otro contenedor en el mismo `docker-compose.yml`.
 
 ## Licencias de terceros
 
@@ -161,3 +262,8 @@ Maus usa software libre que permite uso comercial:
 [html2canvas](https://html2canvas.hertzen.com) (MIT), [node-forge](https://github.com/digitalbazaar/forge) (BSD-3-Clause)
 y los íconos de [Lucide](https://lucide.dev) (ISC, ver `vendor/LICENSE-lucide.txt`).
 Se descargan desde [jsDelivr](https://www.jsdelivr.com) con versión fija y verificación de integridad (SRI) donde el navegador lo permite.
+
+El servidor usa [Express](https://expressjs.com), [node-postgres](https://node-postgres.com), [zod](https://zod.dev) y
+[pino](https://getpino.io) (MIT), [qpdf](https://github.com/qpdf/qpdf) (Apache 2.0) y
+[Ghostscript](https://www.ghostscript.com) (AGPL: se usa sin modificar, como programa aparte dentro del contenedor;
+si algún día lo modificas, la AGPL te obliga a publicar esos cambios).

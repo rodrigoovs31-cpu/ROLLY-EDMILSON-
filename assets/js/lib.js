@@ -15,6 +15,12 @@ const LIBS = {
     cdn: `${CDN}pdf-lib@1.17.1/dist/pdf-lib.esm.min.js`,
     local: 'vendor/pdf-lib.esm.min.js',
   },
+  // La misma versión en formato clásico (UMD): la usa el Web Worker del motor PDF.
+  pdfLibUmd: {
+    cdn: `${CDN}pdf-lib@1.17.1/dist/pdf-lib.min.js`,
+    local: 'vendor/pdf-lib.min.js',
+    integrity: 'sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI',
+  },
   pdfjs: {
     cdn: {
       lib: `${CDN}pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs`,
@@ -94,6 +100,16 @@ export function libraryUrls() {
     else for (const [k, v] of Object.entries(src)) if (!['fonts', 'cmaps'].includes(k)) add(v);
   }
   return urls;
+}
+
+// Direcciones que necesita el Web Worker del motor PDF (CDN primero, copia local de respaldo).
+export function engineLibs() {
+  const both = (cdn, local) => (SITE.useCdn !== false ? [cdn, asset(local)] : [asset(local)]);
+  return {
+    pdfLib: both(LIBS.pdfLibUmd.cdn, LIBS.pdfLibUmd.local),
+    core: [asset('assets/workers/pdf-core.js')],
+    qpdf: { js: both(LIBS.qpdf.cdn.js, LIBS.qpdf.local.js), wasm: both(LIBS.qpdf.cdn.wasm, LIBS.qpdf.local.wasm) },
+  };
 }
 
 // Intenta primero la CDN y, si falla, la copia local.

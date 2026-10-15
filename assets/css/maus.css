@@ -503,7 +503,8 @@ body.dragging .drop-overlay { opacity: 1; }
 .busy-card { width: min(100%, 380px); background: var(--surface); border-radius: var(--radius); padding: 28px; display: grid; gap: 16px; justify-items: center; text-align: center; box-shadow: var(--shadow); }
 .busy-card p { font-weight: 600; }
 .bar { width: 100%; height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-.bar span { display: block; height: 100%; width: 0; background: var(--brand); border-radius: 99px; transition: width .25s; }
+.bar span { display: block; height: 100%; width: 100%; background: var(--brand); border-radius: 99px; transform: scaleX(0); transform-origin: left center; will-change: transform; }
+.busy-pct { margin-top: -8px; font-size: .9rem; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
 .spinner { width: 36px; height: 36px; border-radius: 50%; border: 4px solid var(--surface-2); border-top-color: var(--brand); animation: spin .8s linear infinite; display: inline-block; }
 .spinner.sm { width: 22px; height: 22px; border-width: 3px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -832,3 +833,10 @@ body.dragging .drop-overlay { opacity: 1; }
 .admin-table th, .admin-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .admin-table tr.is-expired td { color: var(--muted); text-decoration: line-through; }
 .admin-result { display: grid; gap: 8px; }
+
+/* Enviar a WhatsApp (pantalla de resultado) */
+.wa-share { display: grid; gap: 6px; justify-items: center; margin-top: 4px; }
+.btn-wa { background: #25D366; color: #06351C; border-color: #1EBE5A; font-weight: 700; }
+.btn-wa:hover { background: #1FBF5B; color: #06351C; }
+.btn-wa:focus-visible { outline: 3px solid #06351C; outline-offset: 2px; }
+.wa-hint { font-size: .85rem; color: var(--muted); max-width: 34ch; text-align: center; }

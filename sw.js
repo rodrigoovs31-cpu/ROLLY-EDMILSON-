@@ -1,6 +1,6 @@
 // Service worker de Maus: guarda la web y sus librerías para que funcione sin internet.
 // Este archivo es una plantilla: scripts/build.mjs genera sw.js con la versión y la lista de archivos.
-const VERSION = 'mv9l1l03';
+const VERSION = 'mv9mqwdb';
 const SHELL = [
   "index.html",
   "flujos.html",
@@ -40,18 +40,20 @@ const SHELL = [
   "pdf-a-markdown.html",
   "privacidad.html",
   "terminos.html",
-  "assets/css/maus.css?v=mv9l1l03",
-  "assets/js/site.js?v=mv9l1l03",
-  "assets/js/tool-page.js?v=mv9l1l03",
+  "assets/css/maus.css?v=mv9mqwdb",
+  "assets/js/site.js?v=mv9mqwdb",
+  "assets/js/tool-page.js?v=mv9mqwdb",
   "assets/js/admin.js",
   "assets/js/config.js",
   "assets/js/docx-build.js",
+  "assets/js/env.js",
   "assets/js/handoff.js",
   "assets/js/icons.js",
   "assets/js/lib.js",
   "assets/js/pades.js",
   "assets/js/page-editor.js",
   "assets/js/pages-view.js",
+  "assets/js/pdf-engine.js",
   "assets/js/pro.js",
   "assets/js/render-html.js",
   "assets/js/site.js",
@@ -95,6 +97,8 @@ const SHELL = [
   "assets/js/tools/unlock.js",
   "assets/js/tools/watermark.js",
   "assets/js/tools/word-to-pdf.js",
+  "assets/workers/pdf-core.js",
+  "assets/workers/pdfEngine.worker.js",
   "assets/img/favicon.svg",
   "assets/img/icon-192.png",
   "manifest.webmanifest"

@@ -1,6 +1,6 @@
 // Genera todas las páginas HTML de la web a partir de assets/js/tools-data.js y config.js.
 // Uso: npm run build   (o: node scripts/build.mjs)
-import { writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SITE } from '../assets/js/config.js';
 import { TOOLS, CATEGORIES, HOME_ORDER, FLOWS, toolById } from '../assets/js/tools-data.js';
@@ -9,7 +9,19 @@ import { icon } from '../assets/js/icons.js';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const VERSION = Date.now().toString(36);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const abs = (path) => (SITE.url ? `${SITE.url.replace(/\/$/, '')}/${path}` : path);
+
+// Dominio y API se definen al publicar, nunca fijos en el código:
+//   SITE_URL=https://tudominio.com API_BASE=/api npm run build
+// Sin SITE_URL, la web usa enlaces relativos (sirve en cualquier hosting) y no emite canónicas.
+const SITE_URL = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+const API_BASE = (process.env.API_BASE || '').trim().replace(/\/+$/, '');
+if (SITE_URL && !/^https?:\/\/[^\s/]+(\/[^\s]*)?$/.test(SITE_URL)) throw new Error(`SITE_URL inválida: "${SITE_URL}". Ejemplo: https://documaus.com`);
+if (API_BASE && !/^(\/|https:\/\/)[^\s]*$/.test(API_BASE)) throw new Error(`API_BASE inválida: "${API_BASE}". Ejemplo: /api`);
+writeFileSync(`${ROOT}assets/js/env.js`, `// Generado por scripts/build.mjs: no lo edites a mano.
+// Para cambiarlo: SITE_URL=https://tudominio.com API_BASE=/api npm run build
+export const ENV = ${JSON.stringify({ siteUrl: SITE_URL, apiBase: API_BASE }, null, 2)};
+`);
+const abs = (path) => (SITE_URL ? `${SITE_URL}/${path}` : path);
 const live = TOOLS.filter((t) => t.status === 'ok');
 
 const modules = Object.fromEntries(await Promise.all(live.map(async (t) =>
@@ -25,7 +37,7 @@ function head({ title, desc, path, jsonld }) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
-${SITE.url ? `<link rel="canonical" href="${esc(abs(path))}">\n` : ''}<meta name="theme-color" content="#FFC21A">
+${SITE_URL ? `<link rel="canonical" href="${esc(abs(path))}">\n` : ''}<meta name="theme-color" content="#FFC21A">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${esc(SITE.name)}">
 <meta property="og:title" content="${esc(title)}">
@@ -163,7 +175,7 @@ const home = page({
   main: `<section class="home-hero wrap" id="herramientas">
   <span class="eyebrow"><span class="dot"></span>Herramientas PDF gratis · en español</span>
   <h1>Todo lo que haces con un PDF, <mark>en un solo lugar</mark>.</h1>
-  <p class="lead">Une, divide, comprime, convierte, firma y protege tus documentos. Gratis y sin registrarte. Tus archivos no se suben a ningún servidor: todo pasa dentro de tu navegador.</p>
+  <p class="lead">Une, divide, comprime, convierte, firma y protege tus documentos. Gratis y sin registrarte. <strong>Tus archivos nunca se suben a ningún servidor: 100% procesado en tu navegador</strong>.</p>
   <div class="filters" role="toolbar" aria-label="Filtrar herramientas">
     <button class="chip" type="button" data-cat="all" aria-pressed="true">Todas</button>
     ${CATEGORIES.map((c) => `<button class="chip" type="button" data-cat="${c.id}" aria-pressed="false">${esc(c.name)}</button>`).join('\n    ')}
@@ -412,7 +424,7 @@ for (const t of live) {
 </section>
 
 <div class="busy" id="busy" hidden role="alertdialog" aria-live="assertive" aria-label="Procesando">
-  <div class="busy-card"><span class="spinner"></span><p id="busy-label">Procesando…</p><div class="bar"><span id="busy-bar"></span></div></div>
+  <div class="busy-card"><span class="spinner"></span><p id="busy-label">Procesando…</p><div class="bar" id="busy-progress" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="busy-bar"></span></div><p class="busy-pct" id="busy-pct">0%</p></div>
 </div>
 <div class="drop-overlay" aria-hidden="true">Suelta tus archivos aquí</div>
 <input type="file" id="file-input" hidden>`,
@@ -436,7 +448,9 @@ legal('privacidad.html', 'Política de privacidad', `Cómo ${SITE.name} trata tu
 <h2>Recursos que se descargan</h2>
 <p>Para funcionar, la web descarga sus componentes de código abierto (lectores de PDF, compresión, OCR y modelos de idioma) desde la red de distribución jsDelivr, y las fuentes tipográficas desde Google Fonts. Solo se descargan programas: tus documentos nunca se envían a estos servicios. Como cualquier sitio web, estos servicios pueden registrar datos técnicos como tu dirección IP.</p>
 <h2>Cookies y estadísticas</h2>
-<p>Actualmente ${esc(SITE.name)} no usa cookies propias ni herramientas de seguimiento. Si en el futuro agregamos estadísticas o publicidad, lo indicaremos en esta página.</p>
+<p>${esc(SITE.name)} no usa cookies propias ni herramientas de seguimiento publicitario.${API_BASE ? ` Para mejorar el servicio registramos estadísticas anónimas de uso: qué herramienta usaste, el peso de los archivos y cuánto tardó. Nunca el archivo, su nombre ni su contenido.` : ''}</p>
+<h2>Asistente de WhatsApp</h2>
+<p>La web procesa todo en tu navegador. El asistente de WhatsApp es un servicio aparte y funciona distinto: si nos envías un PDF por WhatsApp, ese archivo sí se procesa en nuestro servidor para devolverte el resultado. Lo guardamos solo mientras dura la operación y lo borramos al terminar (como máximo a los 30 minutos si no eliges ninguna acción). Si pones una contraseña, la usamos solo para cifrar tu PDF y no la guardamos. Conservamos tu número y la cantidad de documentos procesados para controlar el cupo de tu plan. Puedes pedir que borremos tus datos escribiéndonos (Ley N.° 29733 de Protección de Datos Personales).</p>
 <h2>Plan Pro y contacto</h2>
 <p>Si nos escribes por WhatsApp o correo para contratar el plan Pro, usaremos tus datos de contacto solo para atenderte y gestionar tu pago. Tu código Pro se guarda solo en tu navegador.</p>
 <h2>Certificados digitales</h2>
@@ -488,6 +502,7 @@ writeFileSync(`${ROOT}admin.html`, page({
 const jsFiles = [
   ...readdirSync(`${ROOT}assets/js`).filter((f) => f.endsWith('.js') && !f.startsWith('sw-')).map((f) => `assets/js/${f}`),
   ...readdirSync(`${ROOT}assets/js/tools`).filter((f) => f.endsWith('.js')).map((f) => `assets/js/tools/${f}`),
+  ...readdirSync(`${ROOT}assets/workers`).filter((f) => f.endsWith('.js')).map((f) => `assets/workers/${f}`),
 ];
 const shell = [
   'index.html', 'flujos.html', ...live.map((t) => `${t.id}.html`), 'privacidad.html', 'terminos.html',
@@ -503,18 +518,21 @@ writeFileSync(`${ROOT}sw.js`, readFileSync(`${ROOT}assets/js/sw-template.js`, 'u
 // La 404 puede mostrarse en cualquier ruta: con <base> sus enlaces y estilos siguen funcionando.
 writeFileSync(`${ROOT}404.html`, page({
   head: head({ title: `Página no encontrada | ${SITE.name}`, desc: 'Esta página no existe.', path: '404.html' })
-    .replace('<head>', SITE.url ? `<head>\n<base href="${esc(SITE.url.replace(/\/$/, ''))}/">` : '<head>'),
+    .replace('<head>', SITE_URL ? `<head>\n<base href="${esc(SITE_URL)}/">` : '<head>'),
   main: `<section class="wrap prose"><h1>Esta página no existe</h1><p>Puede que el enlace esté mal escrito o que la página se haya movido.</p><p style="margin-top:24px"><a class="btn btn-brand btn-lg" href="index.html">Ver todas las herramientas</a></p></section>`,
 }));
 
-if (SITE.url) {
+if (SITE_URL) {
   const urls = ['', 'flujos.html', ...live.map((t) => `${t.id}.html`), 'privacidad.html', 'terminos.html'];
   writeFileSync(`${ROOT}sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${esc(abs(u))}</loc></url>`).join('\n')}
 </urlset>
 `);
+} else {
+  // Un sitemap exige direcciones absolutas: sin SITE_URL no se publica ninguno.
+  rmSync(`${ROOT}sitemap.xml`, { force: true });
 }
-writeFileSync(`${ROOT}robots.txt`, `User-agent: *\nAllow: /\nDisallow: /admin.html\n${SITE.url ? `Sitemap: ${abs('sitemap.xml')}\n` : ''}`);
+writeFileSync(`${ROOT}robots.txt`, `User-agent: *\nAllow: /\nDisallow: /admin.html\n${SITE_URL ? `Sitemap: ${abs('sitemap.xml')}\n` : ''}`);
 
 console.log(`Listo: index.html, ${live.length} herramientas, privacidad, términos y 404.`);

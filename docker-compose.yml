@@ -1,0 +1,97 @@
+# Maus / DocuMaus en producción: PostgreSQL 16 + API (rolly_api) + nginx con HTTPS.
+#   1) cp .env.example .env   y completa los valores
+#   2) docker compose up -d --build
+#   3) ./deploy/init-letsencrypt.sh     (solo la primera vez: certificado HTTPS gratis)
+name: rolly
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rolly_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rolly}
+      POSTGRES_USER: ${POSTGRES_USER:-rolly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [backend]
+    # Sin "ports": la base de datos NO queda expuesta a internet.
+    logging: &logging
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  rolly_api:
+    build:
+      context: .
+      target: api
+    image: rolly/api:latest
+    container_name: rolly_api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATA_DIR: /data
+      DATABASE_URL: postgres://${POSTGRES_USER:-rolly}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-rolly}
+      SITE_URL: https://${DOMAIN:?Define DOMAIN en .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - apidata:/data          # archivos temporales de WhatsApp (se borran al terminar cada trabajo)
+    expose: ["3000"]
+    networks: [backend, frontend]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: ${API_MEM_LIMIT:-1g}
+    logging: *logging
+
+  nginx:
+    build:
+      context: .
+      target: web
+      args:
+        SITE_URL: https://${DOMAIN}
+        API_BASE: /api
+    image: rolly/web:latest
+    container_name: rolly_web
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+    depends_on:
+      rolly_api:
+        condition: service_started
+    networks: [frontend]
+    logging: *logging
+
+  # Renueva el certificado HTTPS automáticamente (vence cada 90 días; certbot lo renueva a los 60).
+  certbot:
+    image: certbot/certbot:latest
+    container_name: rolly_certbot
+    restart: unless-stopped
+    volumes:
+      - ./deploy/certbot/conf:/etc/letsencrypt
+      - ./deploy/certbot/www:/var/www/certbot
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+    logging: *logging
+
+volumes:
+  pgdata:
+  apidata:
+
+networks:
+  backend:
+    internal: true   # solo la API habla con PostgreSQL
+  frontend:

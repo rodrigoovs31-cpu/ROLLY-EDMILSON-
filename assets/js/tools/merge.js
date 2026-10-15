@@ -1,4 +1,4 @@
-import { loadPdfDoc, readBytes, getPdfLib, pdfBlob, yieldUI } from '../lib.js';
+import { mergePdfs } from '../pdf-engine.js';
 import { h } from '../ui.js';
 
 export default {
@@ -22,23 +22,15 @@ export default {
     return null;
   },
 
+  // Corre en el Web Worker: la página no se congela aunque unas cientos de páginas.
   async run(ctx) {
-    const { PDFDocument } = await getPdfLib();
-    const out = await PDFDocument.create();
-    let total = 0;
-    for (const [i, entry] of ctx.files.entries()) {
-      ctx.progress(i / ctx.files.length, `Uniendo ${entry.name}…`);
-      await yieldUI();
-      const src = await loadPdfDoc(await readBytes(entry.file));
-      const pages = await out.copyPages(src, src.getPageIndices());
-      pages.forEach((p) => out.addPage(p));
-      total += pages.length;
-    }
-    ctx.progress(0.95, 'Guardando…');
-    const bytes = await out.save();
+    const { blob, pages } = await mergePdfs(
+      ctx.files.map((entry) => ({ name: entry.name, file: entry.file })),
+      (value, label) => ctx.progress(value, label),
+    );
     return {
-      files: [{ name: 'maus-unido.pdf', blob: pdfBlob(bytes) }],
-      summary: `Uniste ${ctx.files.length} archivos en un PDF de ${total} páginas.`,
+      files: [{ name: 'maus-unido.pdf', blob }],
+      summary: `Uniste ${ctx.files.length} archivos en un PDF de ${pages} páginas.`,
     };
   },
 };

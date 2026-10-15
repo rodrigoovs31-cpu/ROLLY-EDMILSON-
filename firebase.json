@@ -1,12 +1,13 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "scripts/**", "package.json", "README.md", "_headers"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "scripts/**", "package.json", "README.md", "_headers", "server/**", "deploy/**", "Dockerfile", "docker-compose.yml", "web-dist/**"],
     "headers": [
       { "source": "/vendor/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
       { "source": "/assets/css/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
       { "source": "/assets/img/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] },
       { "source": "/assets/js/**", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+      { "source": "/assets/workers/**", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
       { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
       { "source": "**", "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
