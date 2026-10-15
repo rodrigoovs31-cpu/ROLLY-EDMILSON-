@@ -63,7 +63,7 @@ Los folios, sellos y resaltados quedan grabados en el contenido de cada hoja (no
 Opcional: bloquear la edición con permisos del PDF. Para que cualquier cambio posterior sea **detectable**, el paso
 correcto es firmarlo al final con "Firma digital".
 
-**Cómo se cobra**: el armador requiere el plan **Legal** (US$ 19/mes) o **Estudio** (US$ 39/mes, hasta 5 personas).
+**Cómo se cobra**: el armador requiere el plan **Legal** (S/ 19/mes) o **Estudio** (S/ 39/mes, hasta 5 personas).
 Sin plan, cualquiera puede probarlo completo y descargar una **vista previa con marca de agua** (así los abogados ven
 el resultado antes de pagar). Precios en `config.js` → `plans`; qué plan abre qué función en `pro.planFeatures`.
 En `admin.html` eliges el plan (Pro, Legal o Estudio) al generar cada código.
@@ -71,7 +71,7 @@ En `admin.html` eliges el plan (Pro, Legal o Estudio) al generar cada código.
 ## DocuMaus Pro (cobrar sin servidor)
 
 - **Planes**: Pro (S/ 9) trae firma digital con certificado, flujos de trabajo y sin límites (gratis: 20 archivos a la vez
-  y OCR de 10 páginas). Legal (US$ 19) y Estudio (US$ 39) suman el armador de expedientes.
+  y OCR de 10 páginas). Legal (S/ 19) y Estudio (S/ 39) suman el armador de expedientes.
   Se cambia en `config.js` → `proPrice`, `plans`, `pro.features`, `pro.planFeatures` y `pro.freeLimits`.
 - **Cómo vendes**: el cliente paga por Yape o transferencia, tú confirmas el pago en tu app y le envías un **código Pro** por WhatsApp.
 - **Tu panel**: abre `admin.html` en tu celular (no aparece en el menú ni en Google).

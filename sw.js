@@ -1,6 +1,6 @@
 // Service worker de DocuMaus: guarda la web y sus librerías para que funcione sin internet.
 // Este archivo es una plantilla: scripts/build.mjs genera sw.js con la versión y la lista de archivos.
-const VERSION = 'mv9zahqs';
+const VERSION = 'mva4eciz';
 const SHELL = [
   "index.html",
   "flujos.html",
@@ -41,9 +41,9 @@ const SHELL = [
   "pdf-a-markdown.html",
   "privacidad.html",
   "terminos.html",
-  "assets/css/maus.css?v=mv9zahqs",
-  "assets/js/site.js?v=mv9zahqs",
-  "assets/js/tool-page.js?v=mv9zahqs",
+  "assets/css/maus.css?v=mva4eciz",
+  "assets/js/site.js?v=mva4eciz",
+  "assets/js/tool-page.js?v=mva4eciz",
   "assets/js/admin.js",
   "assets/js/config.js",
   "assets/js/docx-build.js",

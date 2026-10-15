@@ -1,13 +1,16 @@
 {
-  "name": "maus",
+  "name": "documaus",
   "version": "1.0.0",
   "private": true,
-  "description": "Maus: herramientas PDF gratis en español que funcionan en el navegador.",
+  "description": "DocuMaus: herramientas PDF gratis en español que funcionan en el navegador.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "start": "python3 -m http.server 8080",
     "export": "node scripts/export-web.mjs",
     "build:prod": "node scripts/build.mjs && node scripts/export-web.mjs web-dist"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

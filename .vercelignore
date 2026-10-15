@@ -1,0 +1,7 @@
+# Vercel solo publica la web estática (web-dist). El servidor de WhatsApp va en Docker.
+server
+deploy
+n8n
+Dockerfile
+docker-compose.yml
+.env*

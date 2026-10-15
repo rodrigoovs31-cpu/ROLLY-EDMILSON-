@@ -13,7 +13,11 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 // Dominio y API se definen al publicar, nunca fijos en el código:
 //   SITE_URL=https://tudominio.com API_BASE=/api npm run build
 // Sin SITE_URL, la web usa enlaces relativos (sirve en cualquier hosting) y no emite canónicas.
-const SITE_URL = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+// En Vercel, si no defines SITE_URL, se usa el dominio de producción del proyecto
+// (documaus.vercel.app o tu dominio propio cuando lo conectes). Las vistas previas no llevan canónicas.
+const VERCEL_PROD = process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '';
+const SITE_URL = (process.env.SITE_URL || VERCEL_PROD).trim().replace(/\/+$/, '');
 const API_BASE = (process.env.API_BASE || '').trim().replace(/\/+$/, '');
 if (SITE_URL && !/^https?:\/\/[^\s/]+(\/[^\s]*)?$/.test(SITE_URL)) throw new Error(`SITE_URL inválida: "${SITE_URL}". Ejemplo: https://documaus.com`);
 if (API_BASE && !/^(\/|https:\/\/)[^\s]*$/.test(API_BASE)) throw new Error(`API_BASE inválida: "${API_BASE}". Ejemplo: /api`);
@@ -22,6 +26,8 @@ writeFileSync(`${ROOT}assets/js/env.js`, `// Generado por scripts/build.mjs: no 
 export const ENV = ${JSON.stringify({ siteUrl: SITE_URL, apiBase: API_BASE }, null, 2)};
 `);
 const abs = (path) => (SITE_URL ? `${SITE_URL}/${path}` : path);
+// Código de moneda para Google (S/ → PEN, US$ → USD).
+const isoCurrency = (symbol) => ({ 'S/': 'PEN', 'S/.': 'PEN', 'US$': 'USD', $: 'USD' })[String(symbol).trim()] || 'PEN';
 const live = TOOLS.filter((t) => t.status === 'ok');
 
 const modules = Object.fromEntries(await Promise.all(live.map(async (t) =>
@@ -408,8 +414,8 @@ for (const t of live) {
         operatingSystem: 'Web',
         inLanguage: 'es',
         offers: t.plan && SITE.plans?.[t.plan]
-          ? { '@type': 'Offer', price: SITE.plans[t.plan].price, priceCurrency: 'USD' }
-          : { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          ? { '@type': 'Offer', price: SITE.plans[t.plan].price, priceCurrency: isoCurrency(SITE.plans[t.plan].currency) }
+          : { '@type': 'Offer', price: '0', priceCurrency: isoCurrency(SITE.currency) },
       },
     }),
     bodyAttr: ` data-tool="${t.id}"`,
