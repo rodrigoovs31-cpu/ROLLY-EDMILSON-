@@ -345,7 +345,7 @@ legal('privacidad.html', 'Política de privacidad', `Cómo ${SITE.name} trata tu
 <h2>Tus archivos</h2>
 <p>${esc(SITE.name)} procesa tus documentos dentro de tu navegador. Tus PDF e imágenes no se envían a nuestros servidores ni a los de terceros. Cuando cierras o recargas la página, los archivos desaparecen de la memoria de tu equipo.</p>
 <h2>Recursos que se descargan</h2>
-<p>Para mostrar la web se cargan fuentes tipográficas de Google Fonts. La herramienta de OCR descarga el motor de reconocimiento y el modelo del idioma desde la red de distribución jsDelivr. Estos servicios pueden registrar datos técnicos como tu dirección IP, igual que cualquier sitio web.</p>
+<p>Para funcionar, la web descarga sus componentes de código abierto (lectores de PDF, compresión, OCR y modelos de idioma) desde la red de distribución jsDelivr, y las fuentes tipográficas desde Google Fonts. Solo se descargan programas: tus documentos nunca se envían a estos servicios. Como cualquier sitio web, estos servicios pueden registrar datos técnicos como tu dirección IP.</p>
 <h2>Cookies y estadísticas</h2>
 <p>Actualmente ${esc(SITE.name)} no usa cookies propias ni herramientas de seguimiento. Si en el futuro agregamos estadísticas o publicidad, lo indicaremos en esta página.</p>
 <h2>Plan Pro y contacto</h2>

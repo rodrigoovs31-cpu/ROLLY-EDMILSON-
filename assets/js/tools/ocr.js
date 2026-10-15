@@ -2,6 +2,7 @@ import { loadScript, readBytes, openPdfjs, renderPage, freeCanvas, baseName, Use
 import { h, field, segmented, iconEl, toast } from '../ui.js';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const TESSERACT_SRI = 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F';
 
 export default {
   accept: 'any',
@@ -23,7 +24,7 @@ export default {
 
   async run(ctx) {
     ctx.progress(0, 'Descargando el motor de OCR…');
-    await loadScript(TESSERACT);
+    await loadScript(TESSERACT, TESSERACT_SRI);
     let step = 0;
     let steps = 1;
     const worker = await window.Tesseract.createWorker(ctx.opts.lang, 1, {

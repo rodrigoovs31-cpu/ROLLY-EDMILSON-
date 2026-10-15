@@ -19,9 +19,14 @@ export const SITE = {
 
   // Plan Pro
   currency: 'S/',
-  proPrice: '9.90',
+  proPrice: '9',
   proPeriod: 'mes',
   paymentMethods: ['Yape', 'Plin', 'Transferencia bancaria'],
+
+  // true = las librerías pesadas se descargan gratis desde jsDelivr (CDN) y casi no
+  // gastan el ancho de banda de tu hosting. Si jsDelivr falla, se usa la carpeta vendor/.
+  // false = todo se sirve desde tu propio hosting.
+  useCdn: true,
 
   // Redes sociales (opcional): enlaces completos.
   social: {
