@@ -5,3 +5,7 @@ n8n
 Dockerfile
 docker-compose.yml
 .env*
+scripts
+README.md
+firebase.json
+_headers
