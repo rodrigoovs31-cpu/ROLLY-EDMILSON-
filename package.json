@@ -11,6 +11,6 @@
     "build:prod": "node scripts/build.mjs && node scripts/export-web.mjs web-dist"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   }
 }
