@@ -8,7 +8,7 @@ export const SITE = {
 
   // Dominio final de la web, sin barra al final. Ej: 'https://maus.pe'
   // Se usa para SEO (sitemap.xml y enlaces canónicos).
-  url: '',
+  url: 'https://rodrigoovs31-cpu.github.io/ROLLY-EDMILSON-',
 
   // Tu WhatsApp con código de país, solo números. Ej: '51987654321'
   // Si lo dejas vacío, los botones de WhatsApp no se muestran.

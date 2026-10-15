@@ -367,8 +367,10 @@ legal('terminos.html', 'Términos de uso', `Condiciones para usar ${SITE.name}.`
 
 /* ---------- 404, sitemap y robots ---------- */
 
+// La 404 puede mostrarse en cualquier ruta: con <base> sus enlaces y estilos siguen funcionando.
 writeFileSync(`${ROOT}404.html`, page({
-  head: head({ title: `Página no encontrada | ${SITE.name}`, desc: 'Esta página no existe.', path: '404.html' }),
+  head: head({ title: `Página no encontrada | ${SITE.name}`, desc: 'Esta página no existe.', path: '404.html' })
+    .replace('<head>', SITE.url ? `<head>\n<base href="${esc(SITE.url.replace(/\/$/, ''))}/">` : '<head>'),
   main: `<section class="wrap prose"><h1>Esta página no existe</h1><p>Puede que el enlace esté mal escrito o que la página se haya movido.</p><p style="margin-top:24px"><a class="btn btn-brand btn-lg" href="index.html">Ver todas las herramientas</a></p></section>`,
 }));
 
