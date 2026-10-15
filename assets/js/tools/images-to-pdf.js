@@ -32,7 +32,24 @@ function jpegOrientation(b) {
   return 1;
 }
 
-async function loadImage(file) {
+// Agrega una página con la imagen centrada según tamaño, orientación y margen elegidos.
+export function addImagePage(out, img, opts) {
+  let W, H;
+  if (opts.size === 'fit') {
+    const k = 841.89 / Math.max(img.width, img.height);
+    W = img.width * k; H = img.height * k;
+  } else {
+    [W, H] = SIZES[opts.size];
+    const wantLandscape = opts.orientation === 'landscape' || (opts.orientation !== 'portrait' && img.width > img.height);
+    if (wantLandscape) [W, H] = [H, W];
+  }
+  const m = opts.size === 'fit' ? 0 : MARGINS[opts.margin || 'none'];
+  const k = Math.min((W - 2 * m) / img.width, (H - 2 * m) / img.height);
+  const w = img.width * k, hgt = img.height * k;
+  out.addPage([W, H]).drawImage(img, { x: (W - w) / 2, y: (H - hgt) / 2, width: w, height: hgt });
+}
+
+export async function loadImage(file) {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
@@ -101,21 +118,7 @@ export default {
     for (const [i, entry] of ctx.files.entries()) {
       ctx.progress(i / n, `Agregando imagen ${i + 1} de ${n}…`);
       await yieldUI();
-      const img = await embed(out, entry);
-      const landscapeImg = img.width > img.height;
-      let W, H;
-      if (ctx.opts.size === 'fit') {
-        const k = 841.89 / Math.max(img.width, img.height);
-        W = img.width * k; H = img.height * k;
-      } else {
-        [W, H] = SIZES[ctx.opts.size];
-        const wantLandscape = ctx.opts.orientation === 'landscape' || (ctx.opts.orientation === 'auto' && landscapeImg);
-        if (wantLandscape) [W, H] = [H, W];
-      }
-      const m = ctx.opts.size === 'fit' ? 0 : MARGINS[ctx.opts.margin];
-      const k = Math.min((W - 2 * m) / img.width, (H - 2 * m) / img.height);
-      const w = img.width * k, hgt = img.height * k;
-      out.addPage([W, H]).drawImage(img, { x: (W - w) / 2, y: (H - hgt) / 2, width: w, height: hgt });
+      addImagePage(out, await embed(out, entry), ctx.opts);
     }
     ctx.progress(0.97, 'Guardando…');
     return {

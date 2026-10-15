@@ -3,7 +3,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SITE } from '../assets/js/config.js';
-import { TOOLS, CATEGORIES } from '../assets/js/tools-data.js';
+import { TOOLS, CATEGORIES, HOME_ORDER } from '../assets/js/tools-data.js';
 import { icon } from '../assets/js/icons.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -35,6 +35,7 @@ ${SITE.url ? `<link rel="canonical" href="${esc(abs(path))}">\n` : ''}<meta name
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&display=swap">
@@ -43,14 +44,27 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 }
 
 function header() {
+  const cols = CATEGORIES.map((c) => `<div class="mega-col">
+          <h3 class="mega-title">${esc(c.name)}</h3>
+          <ul>${live.filter((t) => t.cat === c.id).map((t) => `<li><a href="${t.id}.html"><span class="tile sm cat-${t.cat}">${icon(t.icon)}</span>${esc(t.name)}</a></li>`).join('')}</ul>
+        </div>`).join('\n        ');
   return `<header class="site-header">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="${esc(SITE.name)}, inicio">${LOGO}<span class="brand-name">${esc(SITE.name.toLowerCase())}</span></a>
     <nav class="nav" aria-label="Principal">
-      <a href="index.html#herramientas">Herramientas</a>
-      <a class="nav-link-optional" href="index.html#preguntas">Ayuda</a>
+      <a class="nav-link-wide" href="unir-pdf.html">Unir PDF</a>
+      <a class="nav-link-wide" href="dividir-pdf.html">Dividir PDF</a>
+      <a class="nav-link-wide" href="comprimir-pdf.html">Comprimir PDF</a>
+      <button class="nav-all" type="button" aria-expanded="false" aria-controls="mega">Todas las herramientas ${icon('chevron-down')}</button>
       <a class="btn btn-brand sm" href="index.html#planes">Hazte Pro</a>
     </nav>
+  </div>
+  <div class="mega" id="mega" hidden>
+    <div class="wrap">
+      <div class="mega-grid">
+        ${cols}
+      </div>
+    </div>
   </div>
 </header>`;
 }
@@ -65,8 +79,8 @@ function footer() {
         <a class="brand" href="index.html">${LOGO}<span class="brand-name">${esc(SITE.name.toLowerCase())}</span></a>
         <p>Herramientas PDF gratis, rápidas y privadas. Hechas en español para tus trámites de todos los días.</p>
       </div>
-      <div><h4>Herramientas</h4><ul>${col(byId(['unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'jpg-a-pdf', 'firmar-pdf']))}</ul></div>
-      <div><h4>Más</h4><ul>${col(byId(['pdf-a-jpg', 'organizar-pdf', 'proteger-pdf', 'desbloquear-pdf', 'ocr-pdf']))}</ul></div>
+      <div><h4>Herramientas</h4><ul>${col(byId(['unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'editar-pdf', 'firmar-pdf', 'ocr-pdf']))}</ul></div>
+      <div><h4>Convertir</h4><ul>${col(byId(['pdf-a-word', 'word-a-pdf', 'pdf-a-excel', 'excel-a-pdf', 'pdf-a-jpg', 'jpg-a-pdf']))}</ul></div>
       <div><h4>${esc(SITE.name)}</h4><ul>
         <li><a href="index.html#planes">Planes</a></li>
         <li><a href="index.html#preguntas">Preguntas frecuentes</a></li>
@@ -118,7 +132,8 @@ const FAQ = [
   ['¿Mis archivos están seguros?', 'Sí. Tus PDF se procesan dentro de tu navegador y nunca se suben a ningún servidor. Cuando cierras la página, desaparecen.'],
   ['¿Funciona en el celular?', 'Sí, en Android y iPhone, desde Chrome, Safari o cualquier navegador moderno. No necesitas instalar ninguna app.'],
   ['¿Hay un límite de tamaño?', 'No ponemos límites. El único límite es la memoria de tu equipo: en celulares, los PDF de cientos de páginas pueden tardar un poco más.'],
-  ['¿Puedo convertir Word a PDF?', 'Muy pronto. Esa conversión necesita un servidor y la estamos preparando. Mientras tanto, en Word puedes usar Archivo › Guardar como › PDF.'],
+  ['¿Puedo convertir Word, Excel o PowerPoint a PDF?', 'Sí, y también al revés (PDF a Word, Excel y PowerPoint). Todo funciona en tu navegador. Los documentos con diseños muy complejos o fuentes especiales pueden verse un poco distintos.'],
+  ['¿Qué es la IA de Maus?', 'Resumir y Traducir PDF usan Gemini Nano, la inteligencia artificial que Google incluye dentro de Chrome en computadora. Funciona en tu equipo, sin enviar tu documento a internet y sin costo. En celulares, Resumir usa un método que elige las frases más importantes.'],
   [`¿La firma de ${SITE.name} tiene validez legal?`, `${SITE.name} coloca una imagen de tu firma (firma visual). Sirve para la mayoría de documentos del día a día, pero no reemplaza a una firma digital certificada.`],
 ];
 
@@ -144,7 +159,7 @@ const home = page({
 </section>
 <div class="wrap">
   <div class="tools-grid">
-    ${TOOLS.map((t) => toolCard(t)).join('\n    ')}
+    ${HOME_ORDER.map((id) => TOOLS.find((t) => t.id === id)).filter(Boolean).map((t) => toolCard(t)).join('\n    ')}
   </div>
 </div>
 
@@ -187,7 +202,7 @@ const home = page({
         <ul>
           <li>${icon('check')}<span>Todo lo del plan Gratis</span></li>
           <li>${icon('check')}<span>Ayuda personal por WhatsApp con tus documentos</span></li>
-          <li>${icon('check')}<span>Conversión de Word, Excel y PowerPoint a PDF</span></li>
+          <li>${icon('check')}<span>Revisamos y arreglamos por ti los documentos difíciles</span></li>
           <li>${icon('check')}<span>Acceso anticipado a nuevas herramientas</span></li>
         </ul>
         <p class="pay-methods">${icon('sparkles')}<span>Paga con <span data-pay>${esc(SITE.paymentMethods.join(' · '))}</span></span></p>
@@ -214,6 +229,14 @@ const PICK = {
   pdf: (multi) => [multi ? 'Seleccionar archivos PDF' : 'Seleccionar PDF', 'PDF'],
   image: () => ['Seleccionar imágenes', 'JPG, PNG, WEBP o GIF'],
   any: () => ['Seleccionar imagen o PDF', 'PDF, JPG, PNG o WEBP'],
+  docx: (multi) => [multi ? 'Seleccionar archivos de Word' : 'Seleccionar archivo de Word', 'DOCX'],
+  pptx: (multi) => [multi ? 'Seleccionar presentaciones' : 'Seleccionar presentación', 'PPTX'],
+  sheet: (multi) => [multi ? 'Seleccionar hojas de Excel' : 'Seleccionar hoja de Excel', 'XLSX, XLS, ODS o CSV'],
+  html: () => ['Seleccionar archivo HTML', 'HTML'],
+};
+const PICK_OVERRIDE = {
+  'escanear-pdf': ['Tomar foto o elegir imágenes', 'Fotos JPG, PNG o HEIC del celular'],
+  'comparar-pdf': ['Seleccionar 2 archivos PDF', 'PDF (el original y la versión nueva)'],
 };
 const STEP2 = {
   'unir-pdf': ['Ordénalos', 'Arrastra los archivos para dejarlos en el orden que quieras.'],
@@ -232,6 +255,23 @@ const STEP2 = {
   'desbloquear-pdf': ['Escribe la contraseña', 'Si solo tiene restricciones, déjala vacía.'],
   'ocr-pdf': ['Elige el idioma', 'Español, inglés o portugués.'],
   'resumir-pdf': ['Elige el largo', 'Corto, medio o largo. Recibes las ideas principales en puntos.'],
+  'escanear-pdf': ['Elige el acabado', 'Documento en blanco y negro, escala de grises o color mejorado.'],
+  'reparar-pdf': ['Repara', 'Maus reconstruye el archivo o rescata las páginas que se puedan leer.'],
+  'word-a-pdf': ['Convierte', 'Cada página del Word se dibuja con su mismo diseño.'],
+  'powerpoint-a-pdf': ['Convierte', 'Cada diapositiva se convierte en una página.'],
+  'excel-a-pdf': ['Elige las hojas', 'Todas o solo la primera, en vertical u horizontal.'],
+  'html-a-pdf': ['Elige el tamaño', 'A4 o Carta. También puedes pegar el código HTML.'],
+  'pdf-a-word': ['Convierte', 'Maus reconoce títulos, párrafos y viñetas.'],
+  'pdf-a-powerpoint': ['Convierte', 'Cada página queda como una diapositiva.'],
+  'pdf-a-excel': ['Elige cómo organizarlo', 'Todo en una hoja o una hoja por página.'],
+  'pdf-a-pdfa': ['Elige el modo', 'Conservar el texto o máxima compatibilidad.'],
+  'recortar-pdf': ['Marca la zona', 'Mueve las esquinas o usa "Quitar márgenes blancos".'],
+  'editar-pdf': ['Edita', 'Agrega texto, imágenes, formas, resaltado o dibujos.'],
+  'formularios-pdf': ['Rellena o crea campos', 'Llena los campos existentes o dibuja campos nuevos.'],
+  'censurar-pdf': ['Marca lo que quieres tapar', 'Dibuja recuadros o busca una palabra para taparla en todo el documento.'],
+  'comparar-pdf': ['Ordénalos', 'Primero el original y luego la versión nueva.'],
+  'traducir-pdf': ['Elige el idioma', 'Español, inglés, portugués, francés y más.'],
+  'pdf-a-markdown': ['Convierte', 'Títulos, párrafos y listas en formato Markdown.'],
 };
 
 function related(t) {
@@ -243,7 +283,7 @@ function related(t) {
 
 for (const t of live) {
   const mod = modules[t.id];
-  const [pickLabel, formats] = PICK[mod.accept || 'pdf'](mod.multiple);
+  const [pickLabel, formats] = PICK_OVERRIDE[t.id] || PICK[mod.accept || 'pdf'](mod.multiple);
   const [s2title, s2text] = STEP2[t.id];
   const html = page({
     head: head({

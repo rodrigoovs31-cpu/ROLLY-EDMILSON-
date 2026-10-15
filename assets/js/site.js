@@ -45,3 +45,17 @@ if (filters) {
   });
   if (!CATEGORIES.length) filters.hidden = true;
 }
+
+// Menú "Todas las herramientas"
+const allBtn = document.querySelector('.nav-all');
+const mega = document.getElementById('mega');
+if (allBtn && mega) {
+  const setOpen = (open) => {
+    mega.hidden = !open;
+    allBtn.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('mega-open', open);
+  };
+  allBtn.addEventListener('click', () => setOpen(mega.hidden));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !mega.hidden) { setOpen(false); allBtn.focus(); } });
+  document.addEventListener('click', (e) => { if (!mega.hidden && !e.target.closest('#mega, .nav-all')) setOpen(false); });
+}

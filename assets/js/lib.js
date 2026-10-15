@@ -44,6 +44,40 @@ const LIBS = {
     local: { js: 'vendor/qpdf/qpdf.js', wasm: 'vendor/qpdf/qpdf.wasm' },
     integrity: 'sha384-viHHfnvZlwDzjAQCrTUX3UR1zDr3OW9ItyLOqwH2wTHYHXWK8NdKi5LFp++BT8NL',
   },
+  // Librerías de scripts clásicos (definen una variable global). Se cargan con loadLib(nombre).
+  html2canvas: {
+    cdn: `${CDN}html2canvas@1.4.1/dist/html2canvas.min.js`, local: 'vendor/html2canvas.min.js', global: 'html2canvas',
+    integrity: 'sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H',
+  },
+  docxPreview: {
+    cdn: `${CDN}docx-preview@0.3.6/dist/docx-preview.min.js`, local: 'vendor/docx-preview.min.js', global: 'docx', needs: ['jszip'],
+    integrity: 'sha384-kKPxR3hMxt6X0EM6PYDjS3F8X1XaTZE4HfBd4Fv6CRcS+KuEy/P0itqZAIkg7JCR',
+  },
+  docx: {
+    cdn: `${CDN}docx@9.5.1/dist/index.iife.js`, local: 'vendor/docx.iife.js', global: 'docx',
+    integrity: 'sha384-HWC8sFPgg/WYrr43jIR6e0YIKgPkS3VLdteGgh9MFlUet3xdAVEM8YS69xP4Puse',
+  },
+  pptxPreview: {
+    cdn: `${CDN}pptx-preview@1.0.7/dist/pptx-preview.umd.js`, local: 'vendor/pptx-preview.umd.js', global: 'pptxPreview',
+    integrity: 'sha384-CwntHHT2FbwZXuCmbf6K93YaEB9xRVVLaqFJ7pdMykeQABb/3MA0sbt2lGbgi1Mr',
+  },
+  pptxgen: {
+    cdn: `${CDN}pptxgenjs@3.12.0/dist/pptxgen.bundle.js`, local: 'vendor/pptxgen.bundle.js', global: 'PptxGenJS',
+    integrity: 'sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ',
+  },
+  xlsx: {
+    cdn: 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js', local: 'vendor/xlsx.full.min.js', global: 'XLSX',
+    integrity: 'sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT',
+  },
+  jspdf: {
+    cdn: `${CDN}jspdf@2.5.2/dist/jspdf.umd.min.js`, local: 'vendor/jspdf.umd.min.js', global: 'jspdf',
+    integrity: 'sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/',
+  },
+  autotable: {
+    cdn: `${CDN}jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js`, local: 'vendor/jspdf.plugin.autotable.min.js', needs: ['jspdf'],
+    check: () => window.jspdf?.jsPDF?.API?.autoTable,
+    integrity: 'sha384-Xl/CUCfJbzsngMp0CFxkmF0VW/8C160IsGujqeQlIhaGxKz2+JsIGORFqtCPeldF',
+  },
 };
 
 // Intenta primero la CDN y, si falla, la copia local.
@@ -87,6 +121,27 @@ const loadUmd = (lib, globalName) => cdnOrLocal(async (where) => {
   return window[globalName];
 });
 
+const libCache = new Map();
+// Carga una librería de LIBS (y sus dependencias) y devuelve su variable global.
+export function loadLib(key) {
+  if (!libCache.has(key)) {
+    const lib = LIBS[key];
+    libCache.set(key, (async () => {
+      for (const dep of lib.needs || []) await loadLib(dep);
+      return cdnOrLocal(async (where) => {
+        await loadScript(where === 'cdn' ? lib.cdn : asset(lib.local), where === 'cdn' ? lib.integrity : null);
+        const value = lib.check ? lib.check() : window[lib.global];
+        if (!value) throw new Error(`${key} no se cargó`);
+        return value;
+      });
+    })().catch((err) => {
+      libCache.delete(key);
+      throw new Error('No se pudo cargar un componente. Revisa tu conexión e inténtalo otra vez.', { cause: err });
+    }));
+  }
+  return libCache.get(key);
+}
+
 let pdfLibPromise;
 export function getPdfLib() {
   pdfLibPromise ??= cdnOrLocal((where) => import(where === 'cdn' ? LIBS.pdfLib.cdn : asset(LIBS.pdfLib.local)));
@@ -104,11 +159,8 @@ export function getPdfjs() {
   return pdfjsPromise;
 }
 
-let jszipPromise;
-export function getJSZip() {
-  jszipPromise ??= loadUmd(LIBS.jszip, 'JSZip');
-  return jszipPromise;
-}
+LIBS.jszip.global = 'JSZip';
+export const getJSZip = () => loadLib('jszip');
 
 let sortablePromise;
 export function getSortable() {

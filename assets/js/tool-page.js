@@ -29,6 +29,16 @@ const ACCEPT = {
   pdf: { attr: 'application/pdf,.pdf', test: isPdf, msg: 'Solo se aceptan archivos PDF.' },
   image: { attr: 'image/*', test: isImage, msg: 'Solo se aceptan imágenes (JPG, PNG, WEBP).' },
   any: { attr: 'application/pdf,.pdf,image/*', test: (f) => isPdf(f) || isImage(f), msg: 'Solo se aceptan PDF o imágenes.' },
+  docx: {
+    attr: '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document', test: (f) => /\.docx$/i.test(f.name),
+    msg: 'Solo se aceptan documentos .docx. Si tu archivo es .doc, ábrelo en Word y usa "Guardar como" .docx.',
+  },
+  pptx: {
+    attr: '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation', test: (f) => /\.pptx$/i.test(f.name),
+    msg: 'Solo se aceptan presentaciones .pptx. Si tu archivo es .ppt, ábrelo en PowerPoint y usa "Guardar como" .pptx.',
+  },
+  sheet: { attr: '.xlsx,.xlsm,.xls,.ods,.csv', test: (f) => /\.(xlsx|xlsm|xls|ods|csv)$/i.test(f.name), msg: 'Solo se aceptan hojas de cálculo XLSX, XLS, ODS o CSV.' },
+  html: { attr: '.html,.htm,text/html', test: (f) => /\.html?$/i.test(f.name), msg: 'Solo se aceptan archivos .html.' },
 };
 const accept = ACCEPT[mod.accept || 'pdf'];
 el.input.accept = accept.attr;
@@ -68,6 +78,8 @@ function show(stage) {
 /* ---------- Entrada de archivos ---------- */
 
 $('#pick').addEventListener('click', () => el.input.click());
+// Algunas herramientas agregan otra forma de empezar (por ejemplo, pegar código HTML).
+mod.selectExtras?.($('#drop'), (files) => addFiles(files));
 el.input.addEventListener('change', () => {
   addFiles([...el.input.files]);
   el.input.value = '';
@@ -100,8 +112,17 @@ async function addFiles(list) {
   if (ok.length < list.length) toast(accept.msg, 'error');
   if (!ok.length) return;
 
-  const fresh = ok.map((file) => ({ id: ++seq, file, name: file.name, size: file.size, kind: isPdf(file) ? 'pdf' : 'image' }));
-  if (mod.multiple) ctx.files.push(...fresh);
+  const fresh = ok.map((file) => ({
+    id: ++seq, file, name: file.name, size: file.size,
+    kind: isPdf(file) ? 'pdf' : isImage(file) ? 'image' : 'doc',
+  }));
+  if (mod.multiple) {
+    ctx.files.push(...fresh);
+    if (mod.maxFiles && ctx.files.length > mod.maxFiles) {
+      ctx.files.splice(0, ctx.files.length - mod.maxFiles);
+      toast(`Esta herramienta usa ${mod.maxFiles} archivos. Nos quedamos con los últimos.`);
+    }
+  }
   else {
     if (fresh.length > 1) toast('Esta herramienta trabaja con un archivo a la vez. Usamos el primero.');
     ctx.files.splice(0, ctx.files.length, fresh[0]);
@@ -155,6 +176,11 @@ const infoCache = new WeakMap();
 function fileInfo(entry) {
   if (!infoCache.has(entry)) {
     infoCache.set(entry, (async () => {
+      if (entry.kind === 'doc') {
+        const ext = (entry.name.match(/\.([a-z0-9]+)$/i)?.[1] || '').toUpperCase();
+        const iconName = /^DOC/.test(ext) ? 'file-text' : /^PPT/.test(ext) ? 'presentation' : /^(XLS|ODS|CSV)/.test(ext) ? 'sheet' : 'file-code';
+        return { pages: null, locked: false, thumb: h('div.doc-thumb', {}, iconEl(iconName), h('span', {}, ext)) };
+      }
       if (entry.kind === 'image') {
         const url = URL.createObjectURL(entry.file);
         return { pages: 1, locked: false, thumb: h('img', { src: url, alt: '' }) };
@@ -201,6 +227,7 @@ async function renderView() {
     grid.append(h('button.fcard.fadd', { type: 'button', onclick: () => el.input.click() },
       iconEl('plus'), h('span', {}, mod.accept === 'image' ? 'Añadir imágenes' : 'Añadir archivos')));
   }
+  if (mod.maxFiles && ctx.files.length >= mod.maxFiles) grid.querySelector('.fadd')?.remove();
   el.area.replaceChildren(grid);
 
   el.toolbar.replaceChildren(

@@ -233,7 +233,7 @@ export default {
         h('input#sum-ai', { type: 'checkbox', onchange: (e) => { ctx.opts.useAi = e.target.checked; } }),
         'Usar la IA de Chrome (se descarga una sola vez, varios GB)'));
     }
-    el.append(h('p.side-note', {}, 'Funciona con PDF que tienen texto. Si tu PDF es escaneado (una foto), primero usa "OCR: sacar texto".'));
+    el.append(h('p.side-note', {}, 'Funciona con PDF que tienen texto. Si tu PDF es escaneado (una foto), primero usa "OCR PDF".'));
   },
 
   async run(ctx) {
@@ -242,7 +242,7 @@ export default {
     const fullText = pages.join('\n');
     const totalWords = (fullText.match(/[\p{L}\d]+/gu) || []).length;
     if (totalWords < 40) {
-      throw new UserError('Este PDF no tiene texto seleccionable (parece escaneado). Primero usa "OCR: sacar texto".');
+      throw new UserError('Este PDF no tiene texto seleccionable (parece escaneado). Primero usa "OCR PDF".');
     }
 
     ctx.progress(0.55, 'Buscando las ideas principales…');
