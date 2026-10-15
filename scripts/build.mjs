@@ -1,9 +1,9 @@
 // Genera todas las páginas HTML de la web a partir de assets/js/tools-data.js y config.js.
 // Uso: npm run build   (o: node scripts/build.mjs)
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SITE } from '../assets/js/config.js';
-import { TOOLS, CATEGORIES, HOME_ORDER } from '../assets/js/tools-data.js';
+import { TOOLS, CATEGORIES, HOME_ORDER, FLOWS, toolById } from '../assets/js/tools-data.js';
 import { icon } from '../assets/js/icons.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -83,6 +83,7 @@ function footer() {
       <div><h4>Convertir</h4><ul>${col(byId(['pdf-a-word', 'word-a-pdf', 'pdf-a-excel', 'excel-a-pdf', 'pdf-a-jpg', 'jpg-a-pdf']))}</ul></div>
       <div><h4>${esc(SITE.name)}</h4><ul>
         <li><a href="index.html#planes">Planes</a></li>
+        <li><a href="flujos.html">Flujos de trabajo</a></li>
         <li><a href="index.html#preguntas">Preguntas frecuentes</a></li>
         <li><a href="privacidad.html">Privacidad</a></li>
         <li><a href="terminos.html">Términos de uso</a></li>
@@ -111,6 +112,15 @@ function toolCard(t, { small = false } = {}) {
     </${tag}>`;
 }
 
+function flowCard(f) {
+  return `<a class="flow-card" href="${f.steps[0]}.html?flujo=${f.id}&paso=0">
+        <span class="flow-head"><span class="tile cat-${toolById(f.steps[0]).cat}">${icon(f.icon)}</span><span class="badge">Pro</span></span>
+        <h3>${esc(f.name)}</h3>
+        <p>${esc(f.desc)}</p>
+        <ol class="flow-steps">${f.steps.map((id) => `<li>${esc(toolById(id).name)}</li>`).join('')}</ol>
+      </a>`;
+}
+
 function page(parts) {
   return `${parts.head}
 <body${parts.bodyAttr || ''}>
@@ -134,7 +144,9 @@ const FAQ = [
   ['¿Hay un límite de tamaño?', 'No ponemos límites. El único límite es la memoria de tu equipo: en celulares, los PDF de cientos de páginas pueden tardar un poco más.'],
   ['¿Puedo convertir Word, Excel o PowerPoint a PDF?', 'Sí, y también al revés (PDF a Word, Excel y PowerPoint). Todo funciona en tu navegador. Los documentos con diseños muy complejos o fuentes especiales pueden verse un poco distintos.'],
   ['¿Qué es la IA de Maus?', 'Resumir y Traducir PDF usan Gemini Nano, la inteligencia artificial que Google incluye dentro de Chrome en computadora. Funciona en tu equipo, sin enviar tu documento a internet y sin costo. En celulares, Resumir usa un método que elige las frases más importantes.'],
-  [`¿La firma de ${SITE.name} tiene validez legal?`, `${SITE.name} coloca una imagen de tu firma (firma visual). Sirve para la mayoría de documentos del día a día, pero no reemplaza a una firma digital certificada.`],
+  [`¿Qué diferencia hay entre "Firmar PDF" y "Firma digital"?`, `"Firmar PDF" coloca la imagen de tu firma (firma electrónica simple): sirve para el día a día. "Firma digital" usa tu certificado (.pfx o .p12) y protege el documento: si alguien lo cambia, el lector de PDF lo detecta. ${SITE.name} no emite certificados; si un trámite del Estado exige firmar con el DNI electrónico, usa ReFirma de RENIEC.`],
+  [`¿Cómo funciona el código Pro?`, `Pagas por Yape o transferencia, te enviamos un código por WhatsApp y lo pegas en "Ya tengo un código". Se guarda en tu navegador: si cambias de equipo, vuelve a pegarlo.`],
+  [`¿Funciona sin internet?`, `Sí. Toca "Usar sin internet" en la portada y ${SITE.name} guarda sus programas en tu equipo. Después puedes unir, dividir, comprimir, firmar y más aunque no tengas conexión.`],
 ];
 
 const home = page({
@@ -169,12 +181,26 @@ const home = page({
       <h2>Hecho para tus trámites de todos los días</h2>
       <p>Postulaciones, matrículas, contratos, recibos. ${esc(SITE.name)} te deja el documento listo para enviar.</p>
     </div>
-    <div class="benefits">
+    <div class="benefits five">
       <div class="benefit">${icon('shield-check')}<h3>Tus archivos no salen de tu equipo</h3><p>Todo se procesa en tu navegador. Nadie más ve tus documentos, ni siquiera nosotros.</p></div>
       <div class="benefit">${icon('smartphone')}<h3>Funciona en tu celular</h3><p>Firma, comprime o une PDF desde el teléfono, sin instalar ninguna app.</p></div>
       <div class="benefit">${icon('zap')}<h3>Rápido y sin registro</h3><p>Entra, elige tu archivo y descárgalo listo. Sin cuentas y sin esperas.</p></div>
+      <div class="benefit">${icon('cloud-off')}<h3>Funciona sin internet</h3><p>Instálala como app en tu celular o computadora y úsala aunque no tengas conexión.</p><button class="btn btn-ghost sm" type="button" data-offline>${icon('download')}<span>Usar sin internet</span></button></div>
       <div class="benefit">${icon('badge-check')}<h3>Sin marcas de agua</h3><p>Tus documentos salen limpios, sin logos ni sellos de ${esc(SITE.name)}.</p></div>
     </div>
+  </div>
+</section>
+
+<section class="section" id="flujos">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Flujos de trabajo</h2>
+      <p>Varias herramientas seguidas, sin descargar y volver a subir: el resultado de una pasa solo a la siguiente.</p>
+    </div>
+    <div class="flows">
+      ${FLOWS.slice(0, 3).map((f) => flowCard(f)).join('\n      ')}
+    </div>
+    <p style="margin-top:18px"><a class="btn btn-ghost" href="flujos.html">Ver todos los flujos ${icon('arrow-right')}</a></p>
   </div>
 </section>
 
@@ -182,32 +208,53 @@ const home = page({
   <div class="wrap">
     <div class="section-head">
       <h2>Planes</h2>
-      <p>Todas las herramientas son gratis. Con Pro recibes ayuda personal y acceso primero a las novedades.</p>
+      <p>Las herramientas del día a día son gratis para siempre. Pro es para quienes trabajan con documentos todos los días.</p>
     </div>
-    <div class="plans">
+    <div class="plans three">
       <div class="plan">
         <div class="plan-name">Gratis</div>
         <div class="plan-price">${esc(SITE.currency)} 0 <small>para siempre</small></div>
         <ul>
-          <li>${icon('check')}<span>Las ${live.length} herramientas</span></li>
-          <li>${icon('check')}<span>Sin límite de archivos</span></li>
-          <li>${icon('check')}<span>Sin registro y sin marcas de agua</span></li>
+          <li>${icon('check')}<span>${live.filter((t) => !t.pro).length} herramientas sin registro</span></li>
+          <li>${icon('check')}<span>Sin marcas de agua</span></li>
+          <li>${icon('check')}<span>Hasta ${SITE.pro.freeLimits.files} archivos a la vez</span></li>
+          <li>${icon('check')}<span>OCR de hasta ${SITE.pro.freeLimits.ocrPages} páginas</span></li>
           <li>${icon('check')}<span>Tus archivos nunca salen de tu equipo</span></li>
         </ul>
         <a class="btn btn-ghost btn-lg" href="#herramientas">Usar gratis</a>
       </div>
       <div class="plan pro">
-        <div class="plan-name">Pro <span class="badge ok">Recomendado</span></div>
+        <div class="plan-name">Pro <span class="badge ok">Más elegido</span></div>
         <div class="plan-price"><span data-price>${esc(SITE.currency)} ${esc(SITE.proPrice)}</span> <small data-period>/ ${esc(SITE.proPeriod)}</small></div>
         <ul>
           <li>${icon('check')}<span>Todo lo del plan Gratis</span></li>
-          <li>${icon('check')}<span>Ayuda personal por WhatsApp con tus documentos</span></li>
-          <li>${icon('check')}<span>Revisamos y arreglamos por ti los documentos difíciles</span></li>
-          <li>${icon('check')}<span>Acceso anticipado a nuevas herramientas</span></li>
+          <li>${icon('check')}<span><strong>Firma digital</strong> con tu certificado (.pfx o .p12)</span></li>
+          <li>${icon('check')}<span><strong>Flujos de trabajo</strong>: expedientes, contratos, escaneos</span></li>
+          <li>${icon('check')}<span>Archivos y OCR sin límite</span></li>
+          <li>${icon('check')}<span>Ayuda prioritaria por WhatsApp</span></li>
         </ul>
         <p class="pay-methods">${icon('sparkles')}<span>Paga con <span data-pay>${esc(SITE.paymentMethods.join(' · '))}</span></span></p>
-        <a class="btn btn-brand btn-lg" data-wa="Hola, quiero el plan ${esc(SITE.name)} Pro" data-wa-fallback="disable">${icon('message-circle')}Quiero ${esc(SITE.name)} Pro</a>
+        <a class="btn btn-brand btn-lg" href="#pro" data-pro-open>${icon('sparkles')}Quiero ${esc(SITE.name)} Pro</a>
+        <a class="plan-link" href="#pro" data-pro-open>Ya tengo un código</a>
       </div>
+      <div class="plan">
+        <div class="plan-name">Equipos</div>
+        <div class="plan-price">${esc(SITE.currency)} ${esc(SITE.teamPrice)} <small>/ ${esc(SITE.proPeriod)}</small></div>
+        <ul>
+          <li>${icon('check')}<span>Pro para hasta 5 personas</span></li>
+          <li>${icon('check')}<span>Ideal para estudios de abogados, contadores, cabinas y oficinas</span></li>
+          <li>${icon('check')}<span>Capacitación por videollamada para tu equipo</span></li>
+          <li>${icon('check')}<span>Atención preferente</span></li>
+        </ul>
+        <a class="btn btn-ghost btn-lg" data-wa="Hola, quiero el plan Equipos de ${esc(SITE.name)} para mi oficina" data-wa-fallback="disable">${icon('message-circle')}Hablemos</a>
+      </div>
+    </div>
+    <div class="service-band">
+      <div>
+        <h3>¿No tienes tiempo? Te lo hacemos.</h3>
+        <p>Envíanos tus archivos por WhatsApp y te devolvemos el PDF listo para tu trámite: unido, comprimido, firmado o convertido. Desde ${esc(SITE.currency)} ${esc(SITE.servicePrice)} por documento.</p>
+      </div>
+      <a class="btn btn-brand" data-wa="Hola, necesito que me ayuden con un documento" data-wa-fallback="disable">${icon('message-circle')}Pedir ayuda</a>
     </div>
   </div>
 </section>
@@ -254,6 +301,7 @@ const STEP2 = {
   'proteger-pdf': ['Escribe una contraseña', 'Repítela para confirmar y guárdala bien.'],
   'desbloquear-pdf': ['Escribe la contraseña', 'Si solo tiene restricciones, déjala vacía.'],
   'ocr-pdf': ['Elige el idioma', 'Español, inglés o portugués.'],
+  'firma-digital': ['Elige tu certificado', 'Tu archivo .pfx o .p12 y su contraseña. Nunca salen de tu equipo.'],
   'resumir-pdf': ['Elige el largo', 'Corto, medio o largo. Recibes las ideas principales en puntos.'],
   'escanear-pdf': ['Elige el acabado', 'Documento en blanco y negro, escala de grises o color mejorado.'],
   'reparar-pdf': ['Repara', 'Maus reconstruye el archivo o rescata las páginas que se puedan leer.'],
@@ -390,7 +438,9 @@ legal('privacidad.html', 'Política de privacidad', `Cómo ${SITE.name} trata tu
 <h2>Cookies y estadísticas</h2>
 <p>Actualmente ${esc(SITE.name)} no usa cookies propias ni herramientas de seguimiento. Si en el futuro agregamos estadísticas o publicidad, lo indicaremos en esta página.</p>
 <h2>Plan Pro y contacto</h2>
-<p>Si nos escribes por WhatsApp o correo para contratar el plan Pro, usaremos tus datos de contacto solo para atenderte y gestionar tu pago.</p>
+<p>Si nos escribes por WhatsApp o correo para contratar el plan Pro, usaremos tus datos de contacto solo para atenderte y gestionar tu pago. Tu código Pro se guarda solo en tu navegador.</p>
+<h2>Certificados digitales</h2>
+<p>Cuando usas "Firma digital", tu certificado y su contraseña se usan dentro de tu navegador y nunca se envían a internet ni se guardan.</p>
 <h2>Cambios</h2>
 <p>Podemos actualizar esta política. La fecha de arriba indica la última versión.</p>`);
 
@@ -404,7 +454,49 @@ legal('terminos.html', 'Términos de uso', `Condiciones para usar ${SITE.name}.`
 <h2>Sin garantías</h2>
 <p>El servicio se ofrece "tal cual". Revisa siempre el resultado antes de enviarlo o imprimirlo. Guarda una copia de tus archivos originales.</p>
 <h2>Plan Pro</h2>
-<p>El plan Pro es una suscripción opcional. Las condiciones de pago y cancelación se acuerdan al momento de contratarlo.</p>`);
+<p>El plan Pro es una suscripción opcional que se activa con un código personal e intransferible. Las condiciones de pago y cancelación se acuerdan al momento de contratarlo.</p>
+<h2>Firma digital</h2>
+<p>${esc(SITE.name)} no es una entidad de certificación. La herramienta "Firma digital" usa el certificado que tú cargas; su validez depende de quién lo emitió y del trámite en que lo uses.</p>`);
+
+/* ---------- Flujos, panel del dueño y service worker ---------- */
+
+writeFileSync(`${ROOT}flujos.html`, page({
+  head: head({ title: `Flujos de trabajo PDF | ${SITE.name}`, desc: 'Encadena herramientas PDF: expedientes para mesa de partes, contratos firmados, escaneos con OCR y más, sin descargar y volver a subir.', path: 'flujos.html' }),
+  main: `<section class="wrap home-hero">
+  <span class="eyebrow"><span class="dot"></span>${esc(SITE.name)} Pro</span>
+  <h1>Flujos de trabajo</h1>
+  <p class="lead">Elige un flujo y sigue los pasos. El resultado de cada herramienta pasa solo a la siguiente, sin descargar ni volver a subir nada.</p>
+</section>
+<div class="wrap" style="padding-bottom:56px">
+  <div class="flows">
+    ${FLOWS.map((f) => flowCard(f)).join('\n    ')}
+  </div>
+</div>`,
+}));
+
+writeFileSync(`${ROOT}admin.html`, page({
+  head: head({ title: `Panel | ${SITE.name}`, desc: 'Panel del dueño.', path: 'admin.html' }).replace('<head>', '<head>\n<meta name="robots" content="noindex, nofollow">'),
+  main: `<section class="wrap prose admin-page">
+  <h1>Panel de ${esc(SITE.name)}</h1>
+  <p>Esta página es solo para ti. Aquí creas los códigos Pro que vendes y llevas la lista de tus clientes. Todo se guarda en este navegador.</p>
+  <div id="admin"><p class="field-hint">Cargando…</p></div>
+</section>`,
+  scripts: `<script type="module" src="assets/js/admin.js?v=${VERSION}"></script>\n`,
+}));
+
+// Archivos que el service worker guarda para funcionar sin internet
+const jsFiles = [
+  ...readdirSync(`${ROOT}assets/js`).filter((f) => f.endsWith('.js') && !f.startsWith('sw-')).map((f) => `assets/js/${f}`),
+  ...readdirSync(`${ROOT}assets/js/tools`).filter((f) => f.endsWith('.js')).map((f) => `assets/js/tools/${f}`),
+];
+const shell = [
+  'index.html', 'flujos.html', ...live.map((t) => `${t.id}.html`), 'privacidad.html', 'terminos.html',
+  `assets/css/maus.css?v=${VERSION}`, `assets/js/site.js?v=${VERSION}`, `assets/js/tool-page.js?v=${VERSION}`, ...jsFiles,
+  'assets/img/favicon.svg', 'assets/img/icon-192.png', 'manifest.webmanifest',
+];
+writeFileSync(`${ROOT}sw.js`, readFileSync(`${ROOT}assets/js/sw-template.js`, 'utf8')
+  .replace('__VERSION__', VERSION)
+  .replace('__SHELL__', JSON.stringify(shell, null, 2)));
 
 /* ---------- 404, sitemap y robots ---------- */
 
@@ -416,13 +508,13 @@ writeFileSync(`${ROOT}404.html`, page({
 }));
 
 if (SITE.url) {
-  const urls = ['', ...live.map((t) => `${t.id}.html`), 'privacidad.html', 'terminos.html'];
+  const urls = ['', 'flujos.html', ...live.map((t) => `${t.id}.html`), 'privacidad.html', 'terminos.html'];
   writeFileSync(`${ROOT}sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${esc(abs(u))}</loc></url>`).join('\n')}
 </urlset>
 `);
 }
-writeFileSync(`${ROOT}robots.txt`, `User-agent: *\nAllow: /\n${SITE.url ? `Sitemap: ${abs('sitemap.xml')}\n` : ''}`);
+writeFileSync(`${ROOT}robots.txt`, `User-agent: *\nAllow: /\nDisallow: /admin.html\n${SITE.url ? `Sitemap: ${abs('sitemap.xml')}\n` : ''}`);
 
 console.log(`Listo: index.html, ${live.length} herramientas, privacidad, términos y 404.`);

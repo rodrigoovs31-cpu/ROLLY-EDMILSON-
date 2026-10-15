@@ -73,12 +73,28 @@ const LIBS = {
     cdn: `${CDN}jspdf@2.5.2/dist/jspdf.umd.min.js`, local: 'vendor/jspdf.umd.min.js', global: 'jspdf',
     integrity: 'sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/',
   },
+  forge: {
+    cdn: `${CDN}node-forge@1.3.1/dist/forge.min.js`, local: 'vendor/forge.min.js', global: 'forge',
+    integrity: 'sha384-xE6n3RBMZWgwAhyzoIMfY7HN3oDBa/+HBwFFNyxsdY8kseup7C4Blx1yDzprEESV',
+  },
   autotable: {
     cdn: `${CDN}jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js`, local: 'vendor/jspdf.plugin.autotable.min.js', needs: ['jspdf'],
     check: () => window.jspdf?.jsPDF?.API?.autoTable,
     integrity: 'sha384-Xl/CUCfJbzsngMp0CFxkmF0VW/8C160IsGujqeQlIhaGxKz2+JsIGORFqtCPeldF',
   },
 };
+
+// Todas las direcciones de las librerías (para guardarlas y usar Maus sin internet).
+export function libraryUrls() {
+  const urls = [];
+  for (const lib of Object.values(LIBS)) {
+    const src = SITE.useCdn !== false ? lib.cdn : lib.local;
+    const add = (u) => urls.push(SITE.useCdn !== false ? u : asset(u));
+    if (typeof src === 'string') add(src);
+    else for (const [k, v] of Object.entries(src)) if (!['fonts', 'cmaps'].includes(k)) add(v);
+  }
+  return urls;
+}
 
 // Intenta primero la CDN y, si falla, la copia local.
 async function cdnOrLocal(load) {

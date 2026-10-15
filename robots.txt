@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
 Sitemap: https://rodrigoovs31-cpu.github.io/ROLLY-EDMILSON-/sitemap.xml

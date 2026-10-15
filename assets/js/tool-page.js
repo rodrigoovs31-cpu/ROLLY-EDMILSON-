@@ -1,7 +1,9 @@
 // Controlador común de cada página de herramienta:
 // elegir archivos → ajustar opciones → procesar → descargar.
-import { toolById } from './tools-data.js';
+import { toolById, FLOWS, CONTINUE_WITH } from './tools-data.js';
 import { $, h, iconEl, toast } from './ui.js';
+import { loadPro, isPro, requirePro, freeLimit, openProModal } from './pro.js';
+import { saveHandoff, takeHandoff } from './handoff.js';
 import {
   isPdf, isImage, fmtSize, readBytes, openPdfjs, renderThumb, getSortable,
   downloadBlob, zipBlobs, UserError, yieldUI,
@@ -10,6 +12,12 @@ import { mountPages } from './pages-view.js';
 
 const tool = toolById(document.body.dataset.tool);
 const mod = (await import(`./tools/${tool.module}.js`)).default;
+await loadPro();
+
+// Flujo de trabajo en curso (?flujo=id&paso=n) y archivo recibido de otra herramienta (?continuar=1)
+const params = new URLSearchParams(location.search);
+const flow = FLOWS.find((f) => f.id === params.get('flujo'));
+const flowStep = flow ? Math.max(0, Math.min(flow.steps.length - 1, Number(params.get('paso')) || 0)) : 0;
 
 const el = {
   select: $('#stage-select'),
@@ -76,6 +84,15 @@ function show(stage) {
 }
 
 /* ---------- Entrada de archivos ---------- */
+
+if (flow) {
+  const banner = h('div.flow-banner.wrap', {},
+    iconEl('layers'),
+    h('span', {}, h('strong', {}, flow.name), ` · Paso ${flowStep + 1} de ${flow.steps.length}: ${tool.name}`),
+    h('ol.flow-steps', {}, flow.steps.map((id, i) => h('li', { class: i < flowStep ? 'is-done' : i === flowStep ? 'is-current' : '' }, toolById(id).name))));
+  $('main').prepend(banner);
+  if (!isPro()) requirePro('flujos', 'Los flujos de trabajo son parte de Maus Pro.');
+}
 
 $('#pick').addEventListener('click', () => el.input.click());
 // Algunas herramientas agregan otra forma de empezar (por ejemplo, pegar código HTML).
@@ -293,6 +310,13 @@ function buildPagesToolbar() {
 el.run.addEventListener('click', async () => {
   const problem = mod.validate?.(ctx);
   if (problem) { toast(problem, 'error'); return; }
+  if (tool.pro && !requirePro(tool.id, `${tool.name} es parte de Maus Pro.`)) return;
+  if (flow && !requirePro('flujos', 'Los flujos de trabajo son parte de Maus Pro.')) return;
+  const maxFiles = freeLimit('files');
+  if (!isPro() && ctx.files.length > maxFiles) {
+    openProModal(`El plan gratis procesa hasta ${maxFiles} archivos a la vez. Con Pro no hay límite.`);
+    return;
+  }
   el.busy.hidden = false;
   ctx.progress(0, mod.busyLabel || 'Procesando…');
   await yieldUI();
@@ -341,10 +365,42 @@ async function showDone(result) {
     }
   }
 
+  // Seguir trabajando con el resultado en otra herramienta
+  const pdfs = files.filter((f) => /\.pdf$/i.test(f.name));
+  const goTo = async (id, query = 'continuar=1') => {
+    try { await saveHandoff(pdfs); } catch { toast('Tu navegador no permitió pasar el archivo. Descárgalo y súbelo en la otra herramienta.', 'error'); return; }
+    location.href = `${id}.html?${query}`;
+  };
+  if (flow && pdfs.length) {
+    const next = flow.steps[flowStep + 1];
+    box.append(next
+      ? h('div.flow-next', {},
+        h('p', {}, `Paso ${flowStep + 1} de ${flow.steps.length} listo.`),
+        h('button.btn.btn-brand.btn-lg', { type: 'button', id: 'flow-next', onclick: () => goTo(next, `continuar=1&flujo=${flow.id}&paso=${flowStep + 1}`) },
+          `Siguiente paso: ${toolById(next).name}`, iconEl('arrow-right')))
+      : h('p.flow-done', {}, iconEl('check'), h('span', {}, `Terminaste el flujo "${flow.name}".`)));
+  }
+  if (pdfs.length && !result.final && !flow) {
+    const options = CONTINUE_WITH.filter((id) => id !== tool.id).map(toolById).filter(Boolean);
+    box.append(h('div.continue', {},
+      h('p.continue-title', {}, 'Continuar con este archivo'),
+      h('div.continue-list', {}, options.map((t) => h('button.continue-chip', { type: 'button', onclick: () => goTo(t.id) },
+        h(`span.tile.sm.cat-${t.cat}`, { html: iconEl(t.icon).outerHTML }), t.name)))));
+  }
+
   box.append(h('div.done-actions', {},
     h('button.btn.btn-ghost', { type: 'button', onclick: () => show(el.work) }, iconEl('undo-2'), 'Volver a editar'),
     h('button.btn.btn-ghost', { type: 'button', onclick: reset }, iconEl('plus'), 'Empezar de nuevo')));
 
   el.done.querySelector('.done-slot').replaceChildren(box);
   show(el.done);
+}
+
+// Archivo que viene de otra herramienta
+if (params.get('continuar')) {
+  const incoming = await takeHandoff();
+  if (incoming.length) {
+    history.replaceState(null, '', location.pathname + (flow ? `?flujo=${flow.id}&paso=${flowStep}` : ''));
+    await addFiles(incoming);
+  }
 }

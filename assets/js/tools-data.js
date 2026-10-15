@@ -15,7 +15,7 @@ export const CATEGORIES = [
 export const HOME_ORDER = [
   'unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'pdf-a-word', 'pdf-a-powerpoint', 'pdf-a-excel',
   'word-a-pdf', 'powerpoint-a-pdf', 'excel-a-pdf', 'editar-pdf', 'pdf-a-jpg', 'jpg-a-pdf',
-  'firmar-pdf', 'marca-de-agua', 'rotar-pdf', 'html-a-pdf', 'desbloquear-pdf', 'proteger-pdf',
+  'firmar-pdf', 'firma-digital', 'marca-de-agua', 'rotar-pdf', 'html-a-pdf', 'desbloquear-pdf', 'proteger-pdf',
   'organizar-pdf', 'pdf-a-pdfa', 'reparar-pdf', 'numerar-paginas', 'escanear-pdf', 'ocr-pdf',
   'comparar-pdf', 'censurar-pdf', 'recortar-pdf', 'resumir-pdf', 'traducir-pdf', 'pdf-a-markdown',
   'formularios-pdf', 'eliminar-paginas', 'extraer-paginas',
@@ -255,6 +255,14 @@ export const TOOLS = [
     about: 'Si el PDF ya tiene campos, aparecen en el panel para que los llenes. También puedes dibujar campos nuevos (texto o casilla) para convertir cualquier PDF en un formulario rellenable.',
   },
   {
+    id: 'firma-digital', module: 'digital-sign', cat: 'seguridad', icon: 'badge-check', status: 'ok', pro: true,
+    name: 'Firma digital',
+    short: 'Firma con tu certificado digital (.pfx o .p12), con validez criptográfica.',
+    title: 'Firma digital de PDF con certificado .pfx o .p12',
+    desc: 'Firma tus PDF con tu propio certificado digital en el navegador. Estándar PDF reconocido por Adobe Acrobat. Tu certificado nunca sale de tu equipo.',
+    about: 'A diferencia de la firma visual, la firma digital usa tu certificado para proteger el documento: si alguien cambia algo después, el lector de PDF lo detecta. Si tu certificado fue emitido por una entidad acreditada por INDECOPI, la firma lleva tus datos verificables. Para trámites del Estado que exigen el DNI electrónico, usa ReFirma de RENIEC.',
+  },
+  {
     id: 'censurar-pdf', module: 'redact', cat: 'seguridad', icon: 'eye-off', status: 'ok',
     name: 'Censurar PDF',
     short: 'Tapa y borra de verdad datos privados como DNI, cuentas o firmas.',
@@ -289,3 +297,35 @@ export const TOOLS = [
 ];
 
 export const toolById = (id) => TOOLS.find((t) => t.id === id);
+
+// Flujos de trabajo: varias herramientas seguidas, el resultado de una pasa a la siguiente.
+export const FLOWS = [
+  {
+    id: 'expediente', icon: 'file-stack', name: 'Expediente para mesa de partes',
+    desc: 'Junta tus escritos y anexos, numera las páginas y déjalo con el peso que pide el portal.',
+    steps: ['unir-pdf', 'numerar-paginas', 'comprimir-pdf'],
+  },
+  {
+    id: 'archivo-legal', icon: 'archive', name: 'Documento legal firmado',
+    desc: 'Convierte a PDF/A para que dure, y fírmalo al final con tu certificado (la firma siempre va última).',
+    steps: ['pdf-a-pdfa', 'firma-digital'],
+  },
+  {
+    id: 'contrato', icon: 'signature', name: 'Contrato listo para enviar',
+    desc: 'Pasa tu contrato de Word a PDF, fírmalo y protégelo con contraseña.',
+    steps: ['word-a-pdf', 'firmar-pdf', 'proteger-pdf'],
+  },
+  {
+    id: 'escaneo', icon: 'camera', name: 'Escaneo profesional',
+    desc: 'Fotos del celular a PDF limpio, con texto buscable y liviano.',
+    steps: ['escanear-pdf', 'ocr-pdf', 'comprimir-pdf'],
+  },
+  {
+    id: 'confidencial', icon: 'eye-off', name: 'Enviar sin exponer datos',
+    desc: 'Tapa datos privados, marca la copia y ponle contraseña antes de enviarla.',
+    steps: ['censurar-pdf', 'marca-de-agua', 'proteger-pdf'],
+  },
+];
+
+// A qué herramientas se puede pasar un PDF terminado.
+export const CONTINUE_WITH = ['comprimir-pdf', 'unir-pdf', 'firmar-pdf', 'firma-digital', 'proteger-pdf', 'numerar-paginas', 'marca-de-agua', 'editar-pdf', 'organizar-pdf', 'pdf-a-pdfa', 'censurar-pdf', 'pdf-a-word', 'ocr-pdf'];

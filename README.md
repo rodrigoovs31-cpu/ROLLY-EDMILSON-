@@ -4,7 +4,7 @@ Web completa de herramientas PDF, al estilo de las grandes páginas de PDF pero 
 Todo funciona **dentro del navegador**: los archivos de tus usuarios nunca se suben a un servidor. Por eso
 publicarla es gratis (no necesitas pagar un servidor) y puedes prometer privacidad total.
 
-## Herramientas incluidas (33)
+## Herramientas incluidas (34)
 
 Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis y dentro del navegador**.
 
@@ -15,7 +15,7 @@ Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis
 | Convertir a PDF | JPG, Word (DOCX), PowerPoint (PPTX), Excel (XLSX/XLS/CSV) y HTML a PDF |
 | Convertir desde PDF | PDF a JPG, Word (editable), PowerPoint, Excel (tablas con números) y PDF/A-2b |
 | Editar PDF | Rotar, Numerar páginas, Marca de agua, Recortar, Editar (texto, imágenes, formas, resaltado, dibujo, tapar), Formularios (rellenar y crear) |
-| Seguridad de PDF | Firmar, Proteger (AES-256), Desbloquear, Censurar (borra el texto de verdad), Comparar dos versiones |
+| Seguridad de PDF | Firmar (visual), Firma digital con certificado (Pro), Proteger (AES-256), Desbloquear, Censurar (borra el texto de verdad), Comparar dos versiones |
 | Inteligencia PDF | Resumir, Traducir, PDF a Markdown |
 
 ### Qué esperar de cada conversión
@@ -37,6 +37,31 @@ Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis
 (Windows, Mac, Linux; Chrome 138 o más nuevo). Funciona en el equipo del usuario: no envía el documento a internet
 y no te cuesta nada por uso. En celulares no está disponible: ahí **Resumir** usa un algoritmo que elige las frases
 más importantes (TextRank) y **Traducir** ofrece abrir el traductor de documentos de Google.
+
+## Maus Pro (cobrar sin servidor)
+
+- **Qué es Pro**: firma digital con certificado, flujos de trabajo y sin límites (gratis: 20 archivos a la vez y OCR de 10 páginas).
+  Se cambia en `config.js` → `pro.features` y `pro.freeLimits`.
+- **Cómo vendes**: el cliente paga por Yape o transferencia, tú confirmas el pago en tu app y le envías un **código Pro** por WhatsApp.
+- **Tu panel**: abre `admin.html` en tu celular (no aparece en el menú ni en Google).
+  1. "Crear mis llaves" (una sola vez) y **descarga el respaldo**.
+  2. Copia la llave pública en `config.js` → `pro.publicKey`. Mientras esté vacía, todo Pro queda abierto para todos.
+  3. Por cada venta: nombre del cliente, plan y meses → "Generar código" → "Enviar por WhatsApp". El panel guarda tu lista de clientes.
+- Los códigos están firmados con criptografía: nadie puede inventarlos sin tu llave privada, que solo está en tu equipo.
+  Es un candado "de confianza": alguien con conocimientos técnicos podría saltarlo, pero tu negocio real es el servicio y la ayuda.
+
+## Firma digital con certificado
+
+Firma con el certificado del usuario (.pfx o .p12) en formato PDF estándar (PKCS#7, `adbe.pkcs7.detached`).
+Probado con pdfsig (Poppler) y pyHanko: firma válida, cubre todo el documento y detecta cualquier cambio posterior.
+Maus **no emite certificados** (eso solo lo hacen entidades acreditadas por INDECOPI, como RENIEC con el DNI electrónico).
+Si el PDF ya tiene una firma digital, Maus no lo vuelve a firmar para no invalidarla.
+
+## Flujos de trabajo y "sin internet"
+
+- **Flujos** (`flujos.html`): varias herramientas seguidas; el resultado pasa solo al siguiente paso (sin subir nada a internet).
+- **Continuar con…**: al terminar cualquier herramienta, puedes mandar el PDF a otra.
+- **Sin internet**: el botón "Usar sin internet" guarda los programas en el equipo (service worker `sw.js`, generado por `npm run build`).
 
 ## Personalizar tu marca
 
@@ -133,6 +158,6 @@ Maus usa software libre que permite uso comercial:
 [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) (Apache 2.0), [docx](https://github.com/dolanmiu/docx) (MIT),
 [pptx-preview](https://www.npmjs.com/package/pptx-preview) (ISC, uso comercial permitido), [PptxGenJS](https://github.com/gitbrent/PptxGenJS) (MIT),
 [SheetJS](https://sheetjs.com) (Apache 2.0), [jsPDF](https://github.com/parallax/jsPDF) y [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) (MIT),
-[html2canvas](https://html2canvas.hertzen.com) (MIT)
+[html2canvas](https://html2canvas.hertzen.com) (MIT), [node-forge](https://github.com/digitalbazaar/forge) (BSD-3-Clause)
 y los íconos de [Lucide](https://lucide.dev) (ISC, ver `vendor/LICENSE-lucide.txt`).
 Se descargan desde [jsDelivr](https://www.jsdelivr.com) con versión fija y verificación de integridad (SRI) donde el navegador lo permite.

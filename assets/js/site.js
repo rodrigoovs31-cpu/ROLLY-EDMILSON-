@@ -59,3 +59,44 @@ if (allBtn && mega) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !mega.hidden) { setOpen(false); allBtn.focus(); } });
   document.addEventListener('click', (e) => { if (!mega.hidden && !e.target.closest('#mega, .nav-all')) setOpen(false); });
 }
+
+// Maus Pro: estado, botones y enlace directo (#pro)
+import('./pro.js').then(async ({ loadPro, openProModal, proBadgeText }) => {
+  await loadPro();
+  const paint = () => {
+    const text = proBadgeText();
+    for (const el of document.querySelectorAll('.nav .btn-brand')) {
+      if (text) { el.textContent = 'Pro activo'; el.title = text; el.classList.add('is-pro'); }
+    }
+  };
+  paint();
+  document.addEventListener('maus:pro', paint);
+  for (const el of document.querySelectorAll('[data-pro-open]')) {
+    el.addEventListener('click', (e) => { e.preventDefault(); openProModal(); });
+  }
+  if (location.hash === '#pro') openProModal();
+});
+
+// Funcionar sin internet (service worker)
+const swOk = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost');
+if (swOk) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+for (const btn of document.querySelectorAll('[data-offline]')) {
+  if (!swOk) { btn.hidden = true; continue; }
+  btn.addEventListener('click', async () => {
+    const { libraryUrls } = await import('./lib.js');
+    const { toast } = await import('./ui.js');
+    btn.disabled = true;
+    const reg = await navigator.serviceWorker.ready;
+    const label = btn.querySelector('span') || btn;
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data?.type === 'precache-progress') label.textContent = `Descargando… ${e.data.done} de ${e.data.total}`;
+      if (e.data?.type === 'precache-done') {
+        label.textContent = 'Listo: Maus funciona sin internet';
+        toast('Listo. Ahora Maus funciona aunque no tengas internet.');
+      }
+    });
+    reg.active.postMessage({ type: 'precache', urls: libraryUrls() });
+  });
+}

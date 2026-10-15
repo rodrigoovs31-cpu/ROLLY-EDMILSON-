@@ -1,5 +1,6 @@
 import { loadScript, readBytes, openPdfjs, renderPage, freeCanvas, canvasToBlob, getPdfLib, loadPdfDoc, pdfBlob, baseName, visualBox, visualToPdf, UserError } from '../lib.js';
 import { h, field, segmented, iconEl, toast } from '../ui.js';
+import { isPro, freeLimit, openProModal } from '../pro.js';
 
 const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const TESSERACT_SRI = 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F';
@@ -56,6 +57,11 @@ export default {
         }
       }
       steps = jobs.length;
+      const maxPages = freeLimit('ocrPages');
+      if (!isPro() && steps > maxPages) {
+        openProModal(`El plan gratis reconoce hasta ${maxPages} páginas por vez. Este trabajo tiene ${steps}.`);
+        throw new UserError(`El plan gratis reconoce hasta ${maxPages} páginas por vez. Activa Pro o divide el PDF.`);
+      }
       for (const job of jobs) {
         const head = job.doc ? `${job.entry.name} · página ${job.page}` : job.entry.name;
         let canvas;
