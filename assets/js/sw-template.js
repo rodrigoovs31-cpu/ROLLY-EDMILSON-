@@ -1,4 +1,4 @@
-// Service worker de Maus: guarda la web y sus librerías para que funcione sin internet.
+// Service worker de DocuMaus: guarda la web y sus librerías para que funcione sin internet.
 // Este archivo es una plantilla: scripts/build.mjs genera sw.js con la versión y la lista de archivos.
 const VERSION = '__VERSION__';
 const SHELL = __SHELL__;

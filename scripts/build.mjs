@@ -29,6 +29,13 @@ const modules = Object.fromEntries(await Promise.all(live.map(async (t) =>
 
 const LOGO = `<svg viewBox="0 0 48 48" aria-hidden="true"><circle class="lg-body" cx="12" cy="11" r="8.5"/><circle class="lg-accent" cx="12" cy="11" r="4.4"/><circle class="lg-body" cx="36" cy="11" r="8.5"/><circle class="lg-accent" cx="36" cy="11" r="4.4"/><path class="lg-body" d="M15 9h18a7 7 0 0 1 7 7v17L29 44H15a7 7 0 0 1-7-7V16a7 7 0 0 1 7-7Z"/><path class="lg-accent" d="M40 33h-6a5 5 0 0 0-5 5v6Z"/><circle class="lg-eye" cx="18" cy="24" r="2.5"/><circle class="lg-eye" cx="30" cy="24" r="2.5"/><path class="lg-accent" d="M21.6 30.4h4.8L24 33.2Z" stroke="var(--brand)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
 
+// Nombre en el encabezado: "docu" más liviano y "maus" en negrita.
+function brandWord() {
+  const name = SITE.name.toLowerCase();
+  const m = name.match(/^(docu)(.+)$/);
+  return m ? `<span class="bn-pre">${esc(m[1])}</span>${esc(m[2])}` : esc(name);
+}
+
 function head({ title, desc, path, jsonld }) {
   return `<!doctype html>
 <html lang="es">
@@ -62,7 +69,7 @@ function header() {
         </div>`).join('\n        ');
   return `<header class="site-header">
   <div class="wrap">
-    <a class="brand" href="index.html" aria-label="${esc(SITE.name)}, inicio">${LOGO}<span class="brand-name">${esc(SITE.name.toLowerCase())}</span></a>
+    <a class="brand" href="index.html" aria-label="${esc(SITE.name)}, inicio">${LOGO}<span class="brand-name">${brandWord()}</span></a>
     <nav class="nav" aria-label="Principal">
       <a class="nav-link-wide" href="unir-pdf.html">Unir PDF</a>
       <a class="nav-link-wide" href="dividir-pdf.html">Dividir PDF</a>
@@ -88,7 +95,7 @@ function footer() {
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-about">
-        <a class="brand" href="index.html">${LOGO}<span class="brand-name">${esc(SITE.name.toLowerCase())}</span></a>
+        <a class="brand" href="index.html">${LOGO}<span class="brand-name">${brandWord()}</span></a>
         <p>Herramientas PDF gratis, rápidas y privadas. Hechas en español para tus trámites de todos los días.</p>
       </div>
       <div><h4>Herramientas</h4><ul>${col(byId(['unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'editar-pdf', 'firmar-pdf', 'ocr-pdf']))}</ul></div>
@@ -120,7 +127,7 @@ function toolCard(t, { small = false } = {}) {
   return `<${tag} class="tool-card cat-${t.cat}${t.status === 'ok' ? '' : ' is-soon'}"${href} data-cat="${t.cat}">
       <span class="tile cat-${t.cat}">${icon(t.icon)}</span>
       ${small ? `<h3>${esc(t.name)}</h3>` : `<h3>${esc(t.name)}</h3>\n      <p>${esc(t.short)}</p>`}
-      ${t.status === 'ok' ? '' : '<span class="badge">Pronto</span>'}
+      ${t.status === 'ok' ? '' : '<span class="badge">Pronto</span>'}${t.pro ? `<span class="badge plan-badge">${t.plan === 'legal' ? 'Legal' : 'Pro'}</span>` : ''}
     </${tag}>`;
 }
 
@@ -155,7 +162,7 @@ const FAQ = [
   ['¿Funciona en el celular?', 'Sí, en Android y iPhone, desde Chrome, Safari o cualquier navegador moderno. No necesitas instalar ninguna app.'],
   ['¿Hay un límite de tamaño?', 'No ponemos límites. El único límite es la memoria de tu equipo: en celulares, los PDF de cientos de páginas pueden tardar un poco más.'],
   ['¿Puedo convertir Word, Excel o PowerPoint a PDF?', 'Sí, y también al revés (PDF a Word, Excel y PowerPoint). Todo funciona en tu navegador. Los documentos con diseños muy complejos o fuentes especiales pueden verse un poco distintos.'],
-  ['¿Qué es la IA de Maus?', 'Resumir y Traducir PDF usan Gemini Nano, la inteligencia artificial que Google incluye dentro de Chrome en computadora. Funciona en tu equipo, sin enviar tu documento a internet y sin costo. En celulares, Resumir usa un método que elige las frases más importantes.'],
+  ['¿Qué es la IA de DocuMaus?', 'Resumir y Traducir PDF usan Gemini Nano, la inteligencia artificial que Google incluye dentro de Chrome en computadora. Funciona en tu equipo, sin enviar tu documento a internet y sin costo. En celulares, Resumir usa un método que elige las frases más importantes.'],
   [`¿Qué diferencia hay entre "Firmar PDF" y "Firma digital"?`, `"Firmar PDF" coloca la imagen de tu firma (firma electrónica simple): sirve para el día a día. "Firma digital" usa tu certificado (.pfx o .p12) y protege el documento: si alguien lo cambia, el lector de PDF lo detecta. ${SITE.name} no emite certificados; si un trámite del Estado exige firmar con el DNI electrónico, usa ReFirma de RENIEC.`],
   [`¿Cómo funciona el código Pro?`, `Pagas por Yape o transferencia, te enviamos un código por WhatsApp y lo pegas en "Ya tengo un código". Se guarda en tu navegador: si cambias de equipo, vuelve a pegarlo.`],
   [`¿Funciona sin internet?`, `Sí. Toca "Usar sin internet" en la portada y ${SITE.name} guarda sus programas en tu equipo. Después puedes unir, dividir, comprimir, firmar y más aunque no tengas conexión.`],
@@ -186,6 +193,34 @@ const home = page({
     ${HOME_ORDER.map((id) => TOOLS.find((t) => t.id === id)).filter(Boolean).map((t) => toolCard(t)).join('\n    ')}
   </div>
 </div>
+
+<section class="section legal-band" id="legal">
+  <div class="wrap legal-grid">
+    <div>
+      <span class="eyebrow">${icon('scale')}${esc(SITE.name)} Legal · para abogados, notarías y licitaciones</span>
+      <h2>Arma tu expediente con anexos, índice y foliación en minutos</h2>
+      <p>Sube tu escrito y tus medios probatorios. ${esc(SITE.name)} los etiqueta como <strong>ANEXO 1-A, 1-B…</strong>, arma la carátula y el índice con sus folios, resalta lo importante y numera cada hoja con el sello <strong>FOLIO: 001</strong>.</p>
+      <ul class="legal-points">
+        <li>${icon('list-ordered')}<span>Índice de anexos con número, folios y objeto de prueba</span></li>
+        <li>${icon('stamp')}<span>Foliación automática arriba a la derecha, con borde rojo</span></li>
+        <li>${icon('highlighter')}<span>Finalidad probatoria y resaltado fluorescente de cláusulas</span></li>
+        <li>${icon('shield-check')}<span>Expedientes de cientos de hojas, sin subir nada a internet</span></li>
+      </ul>
+      <div class="legal-cta">
+        <a class="btn btn-brand btn-lg" href="armar-expediente.html">${icon('scale')}Armar un expediente</a>
+        <a class="btn btn-ghost btn-lg" href="#planes">Ver plan Legal · desde ${esc(SITE.plans.legal.currency)} ${esc(SITE.plans.legal.price)}/${esc(SITE.plans.legal.period)}</a>
+      </div>
+    </div>
+    <div class="legal-mock" aria-hidden="true">
+      <div class="lm-page lm-back"><span class="lm-folio">FOLIO: 014</span><span class="lm-label">ANEXO 1-B</span><span class="lm-line"></span><span class="lm-line hl"></span><span class="lm-line"></span><span class="lm-line short"></span></div>
+      <div class="lm-page lm-front"><span class="lm-folio">FOLIO: 002</span><strong class="lm-title">ÍNDICE DE ANEXOS</strong>
+        <span class="lm-row"><b>ANEXO 1-A</b><i>Contrato de arrendamiento</i><em>003 – 012</em></span>
+        <span class="lm-row"><b>ANEXO 1-B</b><i>Recibos impagos</i><em>013 – 016</em></span>
+        <span class="lm-row"><b>ANEXO 1-C</b><i>Carta notarial</i><em>017 – 019</em></span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="section">
   <div class="wrap">
@@ -220,9 +255,9 @@ const home = page({
   <div class="wrap">
     <div class="section-head">
       <h2>Planes</h2>
-      <p>Las herramientas del día a día son gratis para siempre. Pro es para quienes trabajan con documentos todos los días.</p>
+      <p>Las herramientas del día a día son gratis para siempre. Pro es para quienes trabajan con documentos todos los días, y Legal para abogados, notarías y licitaciones.</p>
     </div>
-    <div class="plans three">
+    <div class="plans four">
       <div class="plan">
         <div class="plan-name">Gratis</div>
         <div class="plan-price">${esc(SITE.currency)} 0 <small>para siempre</small></div>
@@ -241,7 +276,7 @@ const home = page({
         <ul>
           <li>${icon('check')}<span>Todo lo del plan Gratis</span></li>
           <li>${icon('check')}<span><strong>Firma digital</strong> con tu certificado (.pfx o .p12)</span></li>
-          <li>${icon('check')}<span><strong>Flujos de trabajo</strong>: expedientes, contratos, escaneos</span></li>
+          <li>${icon('check')}<span><strong>Flujos de trabajo</strong>: contratos, escaneos y más</span></li>
           <li>${icon('check')}<span>Archivos y OCR sin límite</span></li>
           <li>${icon('check')}<span>Ayuda prioritaria por WhatsApp</span></li>
         </ul>
@@ -249,16 +284,28 @@ const home = page({
         <a class="btn btn-brand btn-lg" href="#pro" data-pro-open>${icon('sparkles')}Quiero ${esc(SITE.name)} Pro</a>
         <a class="plan-link" href="#pro" data-pro-open>Ya tengo un código</a>
       </div>
-      <div class="plan">
-        <div class="plan-name">Equipos</div>
-        <div class="plan-price">${esc(SITE.currency)} ${esc(SITE.teamPrice)} <small>/ ${esc(SITE.proPeriod)}</small></div>
+      <div class="plan legal">
+        <div class="plan-name">Legal <span class="badge plan-badge">Abogados y licitaciones</span></div>
+        <div class="plan-price">${esc(SITE.plans.legal.currency)} ${esc(SITE.plans.legal.price)} <small>/ ${esc(SITE.plans.legal.period)}</small></div>
         <ul>
-          <li>${icon('check')}<span>Pro para hasta 5 personas</span></li>
-          <li>${icon('check')}<span>Ideal para estudios de abogados, contadores, cabinas y oficinas</span></li>
+          <li>${icon('check')}<span>Todo lo del plan Pro</span></li>
+          <li>${icon('check')}<span><strong>Armador de expedientes</strong>: carátula, índice y anexos 1-A, 1-B…</span></li>
+          <li>${icon('check')}<span><strong>Foliación automática</strong> "FOLIO: 001" con sello rojo</span></li>
+          <li>${icon('check')}<span>Finalidad probatoria y resaltado de cláusulas</span></li>
+        </ul>
+        <a class="btn btn-brand btn-lg" href="#pro" data-pro-open="legal">${icon('scale')}Quiero ${esc(SITE.name)} Legal</a>
+        <a class="plan-link" href="armar-expediente.html">Probarlo gratis con marca de agua</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Estudio</div>
+        <div class="plan-price">${esc(SITE.plans.equipo.currency)} ${esc(SITE.plans.equipo.price)} <small>/ ${esc(SITE.plans.equipo.period)}</small></div>
+        <ul>
+          <li>${icon('check')}<span>Plan Legal para hasta 5 personas</span></li>
+          <li>${icon('check')}<span>Ideal para estudios jurídicos, notarías y despachos contables</span></li>
           <li>${icon('check')}<span>Capacitación por videollamada para tu equipo</span></li>
           <li>${icon('check')}<span>Atención preferente</span></li>
         </ul>
-        <a class="btn btn-ghost btn-lg" data-wa="Hola, quiero el plan Equipos de ${esc(SITE.name)} para mi oficina" data-wa-fallback="disable">${icon('message-circle')}Hablemos</a>
+        <a class="btn btn-ghost btn-lg" href="#pro" data-pro-open="equipo">${icon('message-circle')}Quiero el plan Estudio</a>
       </div>
     </div>
     <div class="service-band">
@@ -296,8 +343,10 @@ const PICK = {
 const PICK_OVERRIDE = {
   'escanear-pdf': ['Tomar foto o elegir imágenes', 'Fotos JPG, PNG o HEIC del celular'],
   'comparar-pdf': ['Seleccionar 2 archivos PDF', 'PDF (el original y la versión nueva)'],
+  'armar-expediente': ['Elegir escrito y pruebas', 'PDF: el primero será el escrito principal'],
 };
 const STEP2 = {
+  'armar-expediente': ['Ordena y describe tus anexos', 'Etiquetas 1-A, 1-B…, finalidad probatoria, resaltado, carátula y foliación.'],
   'unir-pdf': ['Ordénalos', 'Arrastra los archivos para dejarlos en el orden que quieras.'],
   'dividir-pdf': ['Elige cómo dividir', 'Por rangos, cada cierto número de páginas o todas sueltas.'],
   'comprimir-pdf': ['Elige el nivel', 'Recomendada, extrema, sin pérdida o el peso máximo en MB que te piden.'],
@@ -316,12 +365,12 @@ const STEP2 = {
   'firma-digital': ['Elige tu certificado', 'Tu archivo .pfx o .p12 y su contraseña. Nunca salen de tu equipo.'],
   'resumir-pdf': ['Elige el largo', 'Corto, medio o largo. Recibes las ideas principales en puntos.'],
   'escanear-pdf': ['Elige el acabado', 'Documento en blanco y negro, escala de grises o color mejorado.'],
-  'reparar-pdf': ['Repara', 'Maus reconstruye el archivo o rescata las páginas que se puedan leer.'],
+  'reparar-pdf': ['Repara', 'DocuMaus reconstruye el archivo o rescata las páginas que se puedan leer.'],
   'word-a-pdf': ['Convierte', 'Cada página del Word se dibuja con su mismo diseño.'],
   'powerpoint-a-pdf': ['Convierte', 'Cada diapositiva se convierte en una página.'],
   'excel-a-pdf': ['Elige las hojas', 'Todas o solo la primera, en vertical u horizontal.'],
   'html-a-pdf': ['Elige el tamaño', 'A4 o Carta. También puedes pegar el código HTML.'],
-  'pdf-a-word': ['Convierte', 'Maus reconoce títulos, párrafos y viñetas.'],
+  'pdf-a-word': ['Convierte', 'DocuMaus reconoce títulos, párrafos y viñetas.'],
   'pdf-a-powerpoint': ['Convierte', 'Cada página queda como una diapositiva.'],
   'pdf-a-excel': ['Elige cómo organizarlo', 'Todo en una hoja o una hoja por página.'],
   'pdf-a-pdfa': ['Elige el modo', 'Conservar el texto o máxima compatibilidad.'],
@@ -358,7 +407,9 @@ for (const t of live) {
         applicationCategory: 'UtilitiesApplication',
         operatingSystem: 'Web',
         inLanguage: 'es',
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        offers: t.plan && SITE.plans?.[t.plan]
+          ? { '@type': 'Offer', price: SITE.plans[t.plan].price, priceCurrency: 'USD' }
+          : { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       },
     }),
     bodyAttr: ` data-tool="${t.id}"`,
@@ -366,7 +417,7 @@ for (const t of live) {
   <div class="tool-hero">
     <div>
       <span class="tile lg cat-${t.cat}">${icon(t.icon)}</span>
-      <h1>${esc(t.name)}</h1>
+      <h1>${esc(t.name)}${t.pro ? ` <span class="badge plan-badge">${esc(SITE.name)} ${t.plan === 'legal' ? 'Legal' : 'Pro'}</span>` : ''}</h1>
       <p class="lead">${esc(t.short)}</p>
       <p class="privacy">${icon('shield-check')}<span>Tus archivos se procesan en tu dispositivo. Nunca se suben a internet.</span></p>
     </div>
@@ -412,7 +463,9 @@ for (const t of live) {
     <div class="about">
       <h2>Sobre esta herramienta</h2>
       <p>${esc(t.about)}</p>
-      <p>Funciona en celular y computadora, es gratis y no necesitas registrarte.</p>
+      <p>${t.pro
+    ? `Es parte de ${esc(SITE.name)} ${t.plan === 'legal' ? 'Legal' : 'Pro'}: pruébalo gratis (el resultado sale con marca de agua) y activa tu plan para descargarlo limpio.`
+    : 'Funciona en celular y computadora, es gratis y no necesitas registrarte.'}</p>
     </div>
   </div>
   <div class="wrap" style="margin-top:48px">

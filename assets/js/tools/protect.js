@@ -14,7 +14,7 @@ export default {
     el.append(
       field('Contraseña', passwordInput('pw-1', 'Escribe una contraseña', (v) => { ctx.opts.pw = v; })),
       field('Repite la contraseña', passwordInput('pw-2', 'Escríbela otra vez', (v) => { ctx.opts.pw2 = v; })),
-      h('p.side-note', {}, 'Cifrado AES de 256 bits. Guarda tu contraseña: si la olvidas, nadie podrá abrir el archivo, ni siquiera Maus.'),
+      h('p.side-note', {}, 'Cifrado AES de 256 bits. Guarda tu contraseña: si la olvidas, nadie podrá abrir el archivo, ni siquiera DocuMaus.'),
     );
   },
 

@@ -1,7 +1,7 @@
 // Panel del dueño: crea las llaves, genera códigos Pro y guarda el historial de clientes.
 // Todo queda en este navegador. La llave privada nunca se sube a internet.
 import { SITE } from './config.js';
-import { b64url, verifyCode } from './pro.js';
+import { b64url, verifyCode, planName } from './pro.js';
 import { $, h, iconEl, toast } from './ui.js';
 
 const KEYS = 'maus-admin-keys';
@@ -41,7 +41,7 @@ function render() {
         const data = JSON.parse(await restore.files[0].text());
         if (!data.privateJwk || !data.publicKey) throw new Error();
         write(KEYS, data); toast('Llaves restauradas'); render();
-      } catch { toast('Ese archivo no es un respaldo de llaves de Maus.', 'error'); }
+      } catch { toast('Ese archivo no es un respaldo de llaves de DocuMaus.', 'error'); }
     });
     app.append(h('section.admin-card', {},
       h('h2', {}, '1. Crea tus llaves'),
@@ -67,7 +67,8 @@ function render() {
     h('p.field-hint', {}, 'Guarda el respaldo en un lugar seguro (no lo compartas). Si cambias de celular, usa "Restaurar desde respaldo".')));
 
   const name = h('input.input#adm-name', { type: 'text', placeholder: 'Nombre o celular del cliente' });
-  const plan = h('select.input#adm-plan', {}, h('option', { value: 'pro' }, `Pro (${SITE.currency} ${SITE.proPrice}/${SITE.proPeriod})`), h('option', { value: 'equipo' }, `Equipos (${SITE.currency} ${SITE.teamPrice}/${SITE.proPeriod})`));
+  const planLabel = (id) => { const p = SITE.plans?.[id]; return p ? `${p.name} (${p.currency} ${p.price}/${p.period})` : `Pro (${SITE.currency} ${SITE.proPrice}/${SITE.proPeriod})`; };
+  const plan = h('select.input#adm-plan', {}, ['pro', 'legal', 'equipo'].map((id) => h('option', { value: id }, planLabel(id))));
   const months = h('select.input#adm-months', {}, [1, 3, 6, 12].map((m) => h('option', { value: m }, `${m} ${m === 1 ? 'mes' : 'meses'}`)));
   const result = h('div.admin-result');
   const gen = h('button.btn.btn-brand', {
@@ -81,7 +82,7 @@ function render() {
       sales.unshift({ name: name.value.trim(), plan: plan.value, months: Number(months.value), until: until.toISOString().slice(0, 10), date: new Date().toISOString().slice(0, 10), code });
       write(SALES, sales);
       const site = SITE.url || location.origin;
-      const msg = `¡Gracias por tu compra! Este es tu código de ${SITE.name} Pro:\n\n${code}\n\nActívalo aquí: ${site}/index.html#pro\nVálido hasta el ${until.toLocaleDateString('es-PE')}.`;
+      const msg = `¡Gracias por tu compra! Este es tu código de ${SITE.name} ${planName(plan.value)}:\n\n${code}\n\nActívalo aquí: ${site}/index.html#pro\nVálido hasta el ${until.toLocaleDateString('es-PE')}.`;
       result.replaceChildren(
         h('textarea.input.mono#adm-code', { readonly: true, rows: 3 }, code),
         h('div.admin-actions', {},
@@ -108,7 +109,7 @@ function render() {
       sales.length ? h('div.admin-table', {}, h('table', {},
         h('thead', {}, h('tr', {}, ['Fecha', 'Cliente', 'Plan', 'Vence'].map((t) => h('th', {}, t)))),
         h('tbody', {}, sales.map((s) => h('tr', { class: s.until < now ? 'is-expired' : '' },
-          h('td', {}, s.date), h('td', {}, s.name), h('td', {}, s.plan === 'equipo' ? 'Equipos' : 'Pro'), h('td', {}, s.until)))))) : h('p.field-hint', {}, 'Aquí aparecerán los códigos que generes.'),
+          h('td', {}, s.date), h('td', {}, s.name), h('td', {}, planName(s.plan)), h('td', {}, s.until)))))) : h('p.field-hint', {}, 'Aquí aparecerán los códigos que generes.'),
       sales.length ? h('button.btn.btn-ghost.sm', {
         type: 'button',
         onclick: () => {

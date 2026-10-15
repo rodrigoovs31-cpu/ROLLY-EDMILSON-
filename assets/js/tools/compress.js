@@ -50,7 +50,7 @@ export default {
       ['recommended', 'Recomendada', 'Buen equilibrio entre peso y calidad.'],
       ['extreme', 'Extrema', 'El menor peso posible. Menos nitidez.'],
       ['basic', 'Básica', 'Sin pérdida de calidad. El texto sigue siendo seleccionable.'],
-      ['target', 'Tamaño máximo', 'Tú eliges el peso en MB y Maus lo ajusta.'],
+      ['target', 'Tamaño máximo', 'Tú eliges el peso en MB y DocuMaus lo ajusta.'],
     ].map(([value, title, text]) => h('label.level', {},
       h('input', {
         type: 'radio', name: 'compress-level', value, checked: value === 'recommended',

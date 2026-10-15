@@ -1,6 +1,6 @@
 {
-  "name": "Maus: herramientas PDF",
-  "short_name": "Maus",
+  "name": "DocuMaus: herramientas PDF",
+  "short_name": "DocuMaus",
   "description": "Une, comprime, convierte, firma y edita PDF gratis. Tus archivos no se suben a internet.",
   "lang": "es",
   "start_url": "./index.html",

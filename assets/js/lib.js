@@ -90,7 +90,7 @@ const LIBS = {
   },
 };
 
-// Todas las direcciones de las librerías (para guardarlas y usar Maus sin internet).
+// Todas las direcciones de las librerías (para guardarlas y usar DocuMaus sin internet).
 export function libraryUrls() {
   const urls = [];
   for (const lib of Object.values(LIBS)) {
@@ -108,6 +108,7 @@ export function engineLibs() {
   return {
     pdfLib: both(LIBS.pdfLibUmd.cdn, LIBS.pdfLibUmd.local),
     core: [asset('assets/workers/pdf-core.js')],
+    extras: [asset('assets/workers/expediente-core.js')],
     qpdf: { js: both(LIBS.qpdf.cdn.js, LIBS.qpdf.local.js), wasm: both(LIBS.qpdf.cdn.wasm, LIBS.qpdf.local.wasm) },
   };
 }
@@ -375,6 +376,22 @@ export function setToRanges(set) {
     out.push(start === nums[i] ? `${start}` : `${start}-${nums[i]}`);
   }
   return out.join(', ');
+}
+
+/* ---------- Posición de un texto dentro de una línea de pdf.js ---------- */
+
+// pdf.js da el ancho de cada fragmento de texto, no el de cada letra. Para ubicar una palabra
+// dentro del fragmento se mide con la tipografía del PDF (las mayúsculas son más anchas que
+// las minúsculas): así un resaltado o una censura cubre exactamente la palabra buscada.
+let measureCtx;
+export function textSpan(item, from, to, styles = {}) {
+  measureCtx ??= document.createElement('canvas').getContext('2d');
+  const family = styles[item.fontName]?.fontFamily || 'sans-serif';
+  measureCtx.font = `100px ${family}`;
+  const str = item.str || '';
+  const full = measureCtx.measureText(str).width;
+  const at = (n) => (full > 0 ? (measureCtx.measureText(str.slice(0, n)).width / full) * item.width : (item.width * n) / Math.max(1, str.length));
+  return { x0: item.transform[4] + at(from), x1: item.transform[4] + at(to) };
 }
 
 /* ---------- Geometría: dibujar "derecho" sobre páginas giradas ---------- */

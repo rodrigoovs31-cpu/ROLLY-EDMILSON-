@@ -1,10 +1,10 @@
-# Maus: herramientas PDF gratis en español
+# DocuMaus: herramientas PDF gratis en español
 
 Web completa de herramientas PDF, al estilo de las grandes páginas de PDF pero con marca, diseño y código propios.
 Todo funciona **dentro del navegador**: los archivos de tus usuarios nunca se suben a un servidor. Por eso
 publicarla es gratis (no necesitas pagar un servidor) y puedes prometer privacidad total.
 
-## Herramientas incluidas (34)
+## Herramientas incluidas (35)
 
 Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis y dentro del navegador**.
 
@@ -17,6 +17,7 @@ Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis
 | Editar PDF | Rotar, Numerar páginas, Marca de agua, Recortar, Editar (texto, imágenes, formas, resaltado, dibujo, tapar), Formularios (rellenar y crear) |
 | Seguridad de PDF | Firmar (visual), Firma digital con certificado (Pro), Proteger (AES-256), Desbloquear, Censurar (borra el texto de verdad), Comparar dos versiones |
 | Inteligencia PDF | Resumir, Traducir, PDF a Markdown |
+| Legal y licitaciones | Armar expediente (plan Legal): anexos 1-A, 1-B…, finalidad probatoria, resaltado, carátula, índice y foliación |
 
 ### Qué esperar de cada conversión
 
@@ -38,10 +39,35 @@ Las mismas categorías que las grandes páginas de PDF. Todas funcionan **gratis
 y no te cuesta nada por uso. En celulares no está disponible: ahí **Resumir** usa un algoritmo que elige las frases
 más importantes (TextRank) y **Traducir** ofrece abrir el traductor de documentos de Google.
 
-## Maus Pro (cobrar sin servidor)
+## DocuMaus Legal: armador de expedientes
 
-- **Qué es Pro**: firma digital con certificado, flujos de trabajo y sin límites (gratis: 20 archivos a la vez y OCR de 10 páginas).
-  Se cambia en `config.js` → `pro.features` y `pro.freeLimits`.
+Para abogados, notarías, estudios contables y postores de licitaciones del Estado (`armar-expediente.html`).
+
+1. **Escrito principal + medios probatorios**: el primer PDF es el escrito (demanda, recurso, propuesta técnica);
+   los demás son anexos. Funciona con PDF de cientos de hojas y todo se arma en el Web Worker, sin subir nada.
+2. **Etiquetas automáticas**: ANEXO 1-A, 1-B, 1-C… (o Anexo 1, 2, 3…). Se reordenan con flechas o arrastrando y se
+   renumeran solas. De un mismo PDF puedes sacar varios anexos con distintas páginas ("Extraer otras páginas").
+3. **Finalidad probatoria** de cada anexo (va al índice y a la hoja separadora) y **resaltado fluorescente** amarillo
+   `#FFFF00`: arrastrando sobre la hoja o buscando un texto. Se dibuja en modo "multiplicar", así el texto sigue legible.
+4. **Foliación**: "FOLIO: 001" arriba a la derecha de cada hoja con doble borde rojo, respetando las hojas giradas.
+   Puedes empezar en cualquier número y foliar de la primera a la última o al revés.
+5. **Carátula e índice de anexos** con número de anexo, folios y objeto de prueba (el índice se mide antes de dibujarse,
+   así sus propios folios también cuadran).
+
+Los folios, sellos y resaltados quedan grabados en el contenido de cada hoja (no son comentarios que se puedan borrar).
+Opcional: bloquear la edición con permisos del PDF. Para que cualquier cambio posterior sea **detectable**, el paso
+correcto es firmarlo al final con "Firma digital".
+
+**Cómo se cobra**: el armador requiere el plan **Legal** (US$ 19/mes) o **Estudio** (US$ 39/mes, hasta 5 personas).
+Sin plan, cualquiera puede probarlo completo y descargar una **vista previa con marca de agua** (así los abogados ven
+el resultado antes de pagar). Precios en `config.js` → `plans`; qué plan abre qué función en `pro.planFeatures`.
+En `admin.html` eliges el plan (Pro, Legal o Estudio) al generar cada código.
+
+## DocuMaus Pro (cobrar sin servidor)
+
+- **Planes**: Pro (S/ 9) trae firma digital con certificado, flujos de trabajo y sin límites (gratis: 20 archivos a la vez
+  y OCR de 10 páginas). Legal (US$ 19) y Estudio (US$ 39) suman el armador de expedientes.
+  Se cambia en `config.js` → `proPrice`, `plans`, `pro.features`, `pro.planFeatures` y `pro.freeLimits`.
 - **Cómo vendes**: el cliente paga por Yape o transferencia, tú confirmas el pago en tu app y le envías un **código Pro** por WhatsApp.
 - **Tu panel**: abre `admin.html` en tu celular (no aparece en el menú ni en Google).
   1. "Crear mis llaves" (una sola vez) y **descarga el respaldo**.
@@ -54,8 +80,8 @@ más importantes (TextRank) y **Traducir** ofrece abrir el traductor de document
 
 Firma con el certificado del usuario (.pfx o .p12) en formato PDF estándar (PKCS#7, `adbe.pkcs7.detached`).
 Probado con pdfsig (Poppler) y pyHanko: firma válida, cubre todo el documento y detecta cualquier cambio posterior.
-Maus **no emite certificados** (eso solo lo hacen entidades acreditadas por INDECOPI, como RENIEC con el DNI electrónico).
-Si el PDF ya tiene una firma digital, Maus no lo vuelve a firmar para no invalidarla.
+DocuMaus **no emite certificados** (eso solo lo hacen entidades acreditadas por INDECOPI, como RENIEC con el DNI electrónico).
+Si el PDF ya tiene una firma digital, DocuMaus no lo vuelve a firmar para no invalidarla.
 
 ## Flujos de trabajo y "sin internet"
 
@@ -94,7 +120,7 @@ npm start            # abre http://localhost:8080
 
 ## Publicarla gratis
 
-Maus es un sitio 100% estático: no tiene servidor, base de datos ni funciones en la nube. El trabajo pesado
+DocuMaus es un sitio 100% estático: no tiene servidor, base de datos ni funciones en la nube. El trabajo pesado
 (leer, unir, comprimir, cifrar, firmar los PDF) lo hace el celular o la computadora de cada usuario, así que
 no importa cuántos usuarios tengas: tu hosting solo entrega archivos.
 
@@ -249,7 +275,7 @@ conversiones de Office 100% idénticas (fuentes y diseños complejos), se puede 
 
 ## Licencias de terceros
 
-Maus usa software libre que permite uso comercial:
+DocuMaus usa software libre que permite uso comercial:
 [pdf-lib](https://github.com/Hopding/pdf-lib) (MIT),
 [PDF.js](https://github.com/mozilla/pdf.js) (Apache 2.0),
 [qpdf](https://github.com/qpdf/qpdf) (Apache 2.0) compilado a WebAssembly por [qpdf-wasm](https://github.com/neslinesli93/qpdf-wasm) (ISC),

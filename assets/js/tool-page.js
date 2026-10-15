@@ -3,7 +3,7 @@
 import { SITE } from './config.js';
 import { toolById, FLOWS, CONTINUE_WITH } from './tools-data.js';
 import { $, h, iconEl, toast } from './ui.js';
-import { loadPro, isPro, requirePro, freeLimit, openProModal } from './pro.js';
+import { loadPro, isPro, requirePro, freeLimit, openProModal, planName } from './pro.js';
 import { saveHandoff, takeHandoff } from './handoff.js';
 import {
   isPdf, isImage, fmtSize, readBytes, openPdfjs, renderThumb, getSortable,
@@ -116,7 +116,7 @@ if (flow) {
     h('span', {}, h('strong', {}, flow.name), ` · Paso ${flowStep + 1} de ${flow.steps.length}: ${tool.name}`),
     h('ol.flow-steps', {}, flow.steps.map((id, i) => h('li', { class: i < flowStep ? 'is-done' : i === flowStep ? 'is-current' : '' }, toolById(id).name))));
   $('main').prepend(banner);
-  if (!isPro()) requirePro('flujos', 'Los flujos de trabajo son parte de Maus Pro.');
+  if (!isPro()) requirePro('flujos', `Los flujos de trabajo son parte de ${SITE.name} Pro.`);
 }
 
 $('#pick').addEventListener('click', () => el.input.click());
@@ -172,6 +172,7 @@ async function addFiles(list) {
   }
 
   if (!workReady) await enterWork();
+  else if (mod.view === 'custom' && mod.onFiles) await mod.onFiles(ctx, fresh);
   else renderView();
 }
 
@@ -332,11 +333,18 @@ function buildPagesToolbar() {
 
 /* ---------- Procesar ---------- */
 
-el.run.addEventListener('click', async () => {
+el.run.addEventListener('click', () => runTool());
+
+// preview: el usuario sin plan prueba la herramienta y recibe el resultado con marca de agua.
+async function runTool({ preview = false } = {}) {
   const problem = mod.validate?.(ctx);
   if (problem) { toast(problem, 'error'); return; }
-  if (tool.pro && !requirePro(tool.id, `${tool.name} es parte de Maus Pro.`)) return;
-  if (flow && !requirePro('flujos', 'Los flujos de trabajo son parte de Maus Pro.')) return;
+  ctx.preview = preview;
+  if (tool.pro && !preview) {
+    const tryIt = mod.preview ? { label: 'Probar gratis con marca de agua', onClick: () => runTool({ preview: true }) } : null;
+    if (!requirePro(tool.id, `${tool.name} es parte de ${SITE.name} ${planName(tool.plan)}.`, tryIt)) return;
+  }
+  if (flow && !requirePro('flujos', `Los flujos de trabajo son parte de ${SITE.name} Pro.`)) return;
   const maxFiles = freeLimit('files');
   if (!isPro() && ctx.files.length > maxFiles) {
     openProModal(`El plan gratis procesa hasta ${maxFiles} archivos a la vez. Con Pro no hay límite.`);
@@ -357,7 +365,7 @@ el.run.addEventListener('click', async () => {
   } finally {
     el.busy.hidden = true;
   }
-});
+}
 
 // Estadística anónima (solo si la web corre en nuestro servidor con API_BASE):
 // herramienta, pesos y tiempo. Nunca el archivo ni su nombre.

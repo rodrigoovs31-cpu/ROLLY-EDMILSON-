@@ -21,7 +21,7 @@ export async function buildDocx(pages, { pageBreaks = true, title = '' } = {}) {
   if (!children.length) children.push(new Paragraph(''));
   const doc = new Document({
     title,
-    creator: 'Maus',
+    creator: 'DocuMaus',
     styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
     sections: [{ children }],
   });

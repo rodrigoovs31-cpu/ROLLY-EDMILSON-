@@ -37,7 +37,7 @@ export default {
   busyLabel: 'Reparando…',
 
   options(ctx, el) {
-    el.append(h('p.side-text', {}, 'Maus reconstruye la estructura del archivo. Si está muy dañado, rescata las páginas que se puedan leer.'));
+    el.append(h('p.side-text', {}, 'DocuMaus reconstruye la estructura del archivo. Si está muy dañado, rescata las páginas que se puedan leer.'));
   },
 
   async run(ctx) {

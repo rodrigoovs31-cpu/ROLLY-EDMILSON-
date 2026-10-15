@@ -1,4 +1,4 @@
-import { loadPdfDoc, readBytes, getPdfLib, pdfBlob, baseName, renderPage, canvasToBlob, freeCanvas, yieldUI } from '../lib.js';
+import { loadPdfDoc, readBytes, getPdfLib, pdfBlob, baseName, renderPage, canvasToBlob, freeCanvas, yieldUI, textSpan } from '../lib.js';
 import { h, iconEl, field, segmented, toast } from '../ui.js';
 import { mountEditor } from '../page-editor.js';
 
@@ -24,11 +24,9 @@ async function findMatches(term) {
       const text = norm(it.str || '');
       let from = 0;
       while (text && (from = text.indexOf(q, from)) !== -1) {
-        const [a, b, c, d, e, f] = it.transform;
+        const [a, b, c, d, , f] = it.transform;
         const size = Math.hypot(c, d) || Math.hypot(a, b);
-        const len = Math.max(1, text.length);
-        const x0 = e + (it.width * from) / len;
-        const x1 = e + (it.width * (from + q.length)) / len;
+        const { x0, x1 } = textSpan(it, from, from + q.length, content.styles);
         const [rx0, ry0, rx1, ry1] = vp.convertToViewportRectangle([x0, f - size * 0.28, x1, f + size * 0.95]);
         const x = Math.min(rx0, rx1) / vp.width;
         const y = Math.min(ry0, ry1) / vp.height;
@@ -124,7 +122,7 @@ export default {
     }
     if (ctx.opts.cleanMeta) {
       out.setTitle(''); out.setAuthor(''); out.setSubject(''); out.setKeywords([]);
-      out.setCreator('Maus'); out.setProducer('Maus');
+      out.setCreator('DocuMaus'); out.setProducer('DocuMaus');
     } else {
       out.setTitle(src.getTitle() || ''); out.setAuthor(src.getAuthor() || '');
     }

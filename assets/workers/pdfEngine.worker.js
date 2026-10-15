@@ -1,4 +1,4 @@
-/* Web Worker del motor PDF de Maus.
+/* Web Worker del motor PDF de DocuMaus.
    Hace el trabajo pesado (unir, marca de agua, extraer páginas, optimizar) fuera del hilo
    principal: la página sigue respondiendo a 60 FPS mientras procesa documentos grandes.
 
@@ -33,6 +33,7 @@ function init() {
   ready ??= (async () => {
     importFirst(libs.pdfLib);  // define self.PDFLib
     importFirst(libs.core);    // define self.MausPdfCore
+    for (const url of libs.extras || []) importScripts(url);  // armador de expedientes
     if (!self.PDFLib || !self.MausPdfCore) throw new Error('no se cargó el motor PDF');
   })();
   return ready;
@@ -98,6 +99,12 @@ const OPS = {
     const { outputs } = await self.MausPdfCore.extract(self.PDFLib, await readBlob(p.blob), p.groups, ctx);
     const buffers = outputs.map(transferable);
     return { result: { buffers }, transfer: buffers };
+  },
+  async expediente(p, ctx) {
+    const files = p.files.map((f) => ({ name: f.name, read: () => readBlob(f.blob) }));
+    const r = await self.MausPdfCore.expediente(self.PDFLib, files, p.job, ctx);
+    const buffer = transferable(r.bytes);
+    return { result: { buffer, sheets: r.sheets, anexos: r.anexos, main: r.main }, transfer: [buffer] };
   },
   async optimize(p, ctx) {
     const { bytes } = await self.MausPdfCore.optimize(await readBlob(p.blob), ctx);

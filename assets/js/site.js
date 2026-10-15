@@ -60,19 +60,19 @@ if (allBtn && mega) {
   document.addEventListener('click', (e) => { if (!mega.hidden && !e.target.closest('#mega, .nav-all')) setOpen(false); });
 }
 
-// Maus Pro: estado, botones y enlace directo (#pro)
+// DocuMaus Pro: estado, botones y enlace directo (#pro)
 import('./pro.js').then(async ({ loadPro, openProModal, proBadgeText }) => {
   await loadPro();
   const paint = () => {
     const text = proBadgeText();
     for (const el of document.querySelectorAll('.nav .btn-brand')) {
-      if (text) { el.textContent = 'Pro activo'; el.title = text; el.classList.add('is-pro'); }
+      if (text) { el.textContent = text.split(' · ')[0]; el.title = text; el.classList.add('is-pro'); }
     }
   };
   paint();
   document.addEventListener('maus:pro', paint);
   for (const el of document.querySelectorAll('[data-pro-open]')) {
-    el.addEventListener('click', (e) => { e.preventDefault(); openProModal(); });
+    el.addEventListener('click', (e) => { e.preventDefault(); openProModal('', { plan: el.dataset.proOpen || 'pro' }); });
   }
   if (location.hash === '#pro') openProModal();
 });
@@ -93,8 +93,8 @@ for (const btn of document.querySelectorAll('[data-offline]')) {
     navigator.serviceWorker.addEventListener('message', (e) => {
       if (e.data?.type === 'precache-progress') label.textContent = `Descargando… ${e.data.done} de ${e.data.total}`;
       if (e.data?.type === 'precache-done') {
-        label.textContent = 'Listo: Maus funciona sin internet';
-        toast('Listo. Ahora Maus funciona aunque no tengas internet.');
+        label.textContent = 'Listo: DocuMaus funciona sin internet';
+        toast('Listo. Ahora DocuMaus funciona aunque no tengas internet.');
       }
     });
     reg.active.postMessage({ type: 'precache', urls: libraryUrls() });

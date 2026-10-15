@@ -4,7 +4,7 @@
 import { ENV } from './env.js';
 
 export const SITE = {
-  name: 'Maus',
+  name: 'DocuMaus',
   tagline: 'Herramientas PDF gratis en español',
 
   // Dominio final de la web (canónicas, sitemap y enlaces para compartir).
@@ -27,7 +27,11 @@ export const SITE = {
   currency: 'S/',
   proPrice: '9',
   proPeriod: 'mes',
-  teamPrice: '29',          // plan para estudios y empresas (hasta 5 personas)
+  // Planes para abogados, notarías y licitaciones (incluyen el Armador de expedientes).
+  plans: {
+    legal: { name: 'Legal', currency: 'US$', price: '19', period: 'mes' },     // 1 persona
+    equipo: { name: 'Estudio', currency: 'US$', price: '39', period: 'mes' },  // estudio u oficina, hasta 5 personas
+  },
   servicePrice: '3',        // "Te lo hacemos": precio desde, por documento
   paymentMethods: ['Yape', 'Plin', 'Transferencia bancaria'],
 
@@ -42,8 +46,10 @@ export const SITE = {
   // todas las funciones Pro quedan abiertas para todos.
   pro: {
     publicKey: '',
-    // Funciones exclusivas de Pro
-    features: ['firma-digital', 'flujos'],
+    // Funciones exclusivas de los planes de pago
+    features: ['firma-digital', 'flujos', 'armar-expediente'],
+    // Funciones que solo traen ciertos planes (el resto viene en cualquier plan de pago)
+    planFeatures: { 'armar-expediente': ['legal', 'equipo'] },
     // Límites del plan gratis
     freeLimits: { files: 20, ocrPages: 10 },
   },

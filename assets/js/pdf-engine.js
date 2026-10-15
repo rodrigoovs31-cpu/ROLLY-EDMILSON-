@@ -9,6 +9,9 @@ const MESSAGES = {
   password: 'Este PDF tiene contraseña. Quítasela primero con "Desbloquear PDF".',
   damaged: 'No pudimos leer este PDF. Puede estar dañado o no ser un PDF real.',
 };
+// Errores que se le explican al usuario (con el mensaje del motor si trae uno propio).
+const USER_CODES = new Set(['password', 'damaged', 'range', 'empty', 'missing']);
+const userError = (code, message) => new UserError(message && message !== code ? message : MESSAGES[code] || 'No se pudo procesar el documento.');
 
 const OOM = /out of memory|allocation failed|memoria/i;
 const TOO_BIG = 'Este documento es demasiado grande para la memoria de este dispositivo. Divídelo en partes o usa una computadora.';
@@ -46,8 +49,7 @@ function getWorker() {
       broken = true;
       job.reject(new WorkerUnavailable(m.message));
     } else if (OOM.test(m.message)) job.reject(new UserError(TOO_BIG));
-    else if (MESSAGES[m.code]) job.reject(new UserError(MESSAGES[m.code]));
-    else if (m.code === 'range') job.reject(new UserError(m.message));
+    else if (USER_CODES.has(m.code)) job.reject(userError(m.code, m.message));
     else job.reject(new Error(m.message));
   };
   worker.onerror = (event) => {
@@ -80,7 +82,9 @@ function call(op, payload, onProgress) {
 // Plan B: el mismo núcleo, en la página.
 let corePromise;
 async function mainThread() {
-  corePromise ??= loadScript(asset('assets/workers/pdf-core.js')).then(() => window.MausPdfCore);
+  corePromise ??= loadScript(asset('assets/workers/pdf-core.js'))
+    .then(() => loadScript(asset('assets/workers/expediente-core.js')))
+    .then(() => window.MausPdfCore);
   const [core, PDFLib] = await Promise.all([corePromise, getPdfLib()]);
   return { core, PDFLib, qpdf: runQpdf };
 }
@@ -94,8 +98,7 @@ async function withFallback(viaWorker, viaPage) {
     try {
       return await viaPage(await mainThread());
     } catch (e) {
-      if (e?.code && MESSAGES[e.code]) throw new UserError(MESSAGES[e.code]);
-      if (e?.code === 'range') throw new UserError(e.message);
+      if (USER_CODES.has(e?.code)) throw userError(e.code, e.message);
       throw e;
     }
   }
@@ -150,3 +153,30 @@ export function optimizePdf(file, onProgress) {
     async ({ core, qpdf }) => (await core.optimize(await readFile(file), { qpdf, progress: onProgress })).bytes,
   );
 }
+
+/**
+ * Arma un expediente (carátula, índice, escrito, anexos, resaltados y foliación).
+ * files: [{ name, file }] · job: ver assets/workers/expediente-core.js
+ * → { blob, sheets, anexos: [{ label, folios, sheets }], main }
+ */
+export function buildExpediente(files, job, onProgress) {
+  return withFallback(
+    async () => {
+      const r = await call('expediente', { files: files.map((f) => ({ name: f.name, blob: f.file })), job }, onProgress);
+      return { blob: pdfBlob(r.buffer), sheets: r.sheets, anexos: r.anexos, main: r.main };
+    },
+    async ({ core, PDFLib, qpdf }) => {
+      const r = await core.expediente(PDFLib, files.map((f) => ({ name: f.name, read: () => readFile(f.file) })), job, { qpdf, progress: onProgress });
+      return { blob: pdfBlob(r.bytes), sheets: r.sheets, anexos: r.anexos, main: r.main };
+    },
+  );
+}
+
+export const anexoLabel = (i, opts) => {
+  const style = opts?.style || 'letter';
+  const number = opts?.number ?? 1;
+  if (style === 'number') return `ANEXO ${number + i}`;
+  let s = '';
+  for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  return `ANEXO ${number}-${s}`;
+};

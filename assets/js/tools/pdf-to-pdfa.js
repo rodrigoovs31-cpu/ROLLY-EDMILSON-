@@ -21,11 +21,11 @@ function xmp(title, date) {
    <pdfaid:conformance>B</pdfaid:conformance>
    <dc:format>application/pdf</dc:format>
    <dc:title><rdf:Alt><rdf:li xml:lang="x-default">${esc(title)}</rdf:li></rdf:Alt></dc:title>
-   <xmp:CreatorTool>Maus</xmp:CreatorTool>
+   <xmp:CreatorTool>DocuMaus</xmp:CreatorTool>
    <xmp:CreateDate>${iso}</xmp:CreateDate>
    <xmp:ModifyDate>${iso}</xmp:ModifyDate>
    <xmp:MetadataDate>${iso}</xmp:MetadataDate>
-   <pdf:Producer>Maus</pdf:Producer>
+   <pdf:Producer>DocuMaus</pdf:Producer>
   </rdf:Description>
  </rdf:RDF>
 </x:xmpmeta>
@@ -144,8 +144,8 @@ export default {
       const title = src.getTitle() || baseName(entry.name);
       const date = isoNow();
       out.setTitle(title);
-      out.setCreator('Maus');
-      out.setProducer('Maus');
+      out.setCreator('DocuMaus');
+      out.setProducer('DocuMaus');
       out.setCreationDate(date);
       out.setModificationDate(date);
       const ctxPdf = out.context;

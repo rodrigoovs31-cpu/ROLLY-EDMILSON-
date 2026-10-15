@@ -1,9 +1,10 @@
-// Service worker de Maus: guarda la web y sus librerías para que funcione sin internet.
+// Service worker de DocuMaus: guarda la web y sus librerías para que funcione sin internet.
 // Este archivo es una plantilla: scripts/build.mjs genera sw.js con la versión y la lista de archivos.
-const VERSION = 'mv9mqwdb';
+const VERSION = 'mv9yinf0';
 const SHELL = [
   "index.html",
   "flujos.html",
+  "armar-expediente.html",
   "unir-pdf.html",
   "dividir-pdf.html",
   "comprimir-pdf.html",
@@ -40,9 +41,9 @@ const SHELL = [
   "pdf-a-markdown.html",
   "privacidad.html",
   "terminos.html",
-  "assets/css/maus.css?v=mv9mqwdb",
-  "assets/js/site.js?v=mv9mqwdb",
-  "assets/js/tool-page.js?v=mv9mqwdb",
+  "assets/css/maus.css?v=mv9yinf0",
+  "assets/js/site.js?v=mv9yinf0",
+  "assets/js/tool-page.js?v=mv9yinf0",
   "assets/js/admin.js",
   "assets/js/config.js",
   "assets/js/docx-build.js",
@@ -69,6 +70,7 @@ const SHELL = [
   "assets/js/tools/digital-sign.js",
   "assets/js/tools/edit.js",
   "assets/js/tools/excel-to-pdf.js",
+  "assets/js/tools/expediente.js",
   "assets/js/tools/extract-pages.js",
   "assets/js/tools/forms.js",
   "assets/js/tools/html-to-pdf.js",
@@ -97,6 +99,7 @@ const SHELL = [
   "assets/js/tools/unlock.js",
   "assets/js/tools/watermark.js",
   "assets/js/tools/word-to-pdf.js",
+  "assets/workers/expediente-core.js",
   "assets/workers/pdf-core.js",
   "assets/workers/pdfEngine.worker.js",
   "assets/img/favicon.svg",

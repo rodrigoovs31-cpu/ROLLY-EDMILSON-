@@ -1,4 +1,4 @@
-/* Núcleo del motor PDF de Maus: unir, marca de agua, extraer páginas y optimizar.
+/* Núcleo del motor PDF de DocuMaus: unir, marca de agua, extraer páginas y optimizar.
    Es un script clásico que funciona igual dentro del Web Worker (importScripts)
    y en la página como respaldo (si el navegador no pudiera abrir el worker).
    No toca el DOM: recibe la librería pdf-lib y devuelve bytes. */

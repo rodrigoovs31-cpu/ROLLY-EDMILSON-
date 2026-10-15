@@ -9,11 +9,12 @@ export const CATEGORIES = [
   { id: 'editar', name: 'Editar PDF' },
   { id: 'seguridad', name: 'Seguridad de PDF' },
   { id: 'ia', name: 'Inteligencia PDF' },
+  { id: 'legal', name: 'Legal y licitaciones' },
 ];
 
 // Orden de las tarjetas en la portada (las más buscadas primero).
 export const HOME_ORDER = [
-  'unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'pdf-a-word', 'pdf-a-powerpoint', 'pdf-a-excel',
+  'armar-expediente', 'unir-pdf', 'dividir-pdf', 'comprimir-pdf', 'pdf-a-word', 'pdf-a-powerpoint', 'pdf-a-excel',
   'word-a-pdf', 'powerpoint-a-pdf', 'excel-a-pdf', 'editar-pdf', 'pdf-a-jpg', 'jpg-a-pdf',
   'firmar-pdf', 'firma-digital', 'marca-de-agua', 'rotar-pdf', 'html-a-pdf', 'desbloquear-pdf', 'proteger-pdf',
   'organizar-pdf', 'pdf-a-pdfa', 'reparar-pdf', 'numerar-paginas', 'escanear-pdf', 'ocr-pdf',
@@ -22,6 +23,14 @@ export const HOME_ORDER = [
 ];
 
 export const TOOLS = [
+  {
+    id: 'armar-expediente', module: 'expediente', cat: 'legal', icon: 'scale', status: 'ok', pro: true, plan: 'legal',
+    name: 'Armar expediente',
+    short: 'Escrito, anexos 1-A, 1-B…, índice, carátula y foliación "FOLIO: 001" en un solo PDF.',
+    title: 'Armar expediente judicial: anexos, índice y foliación automática',
+    desc: 'Arma expedientes judiciales, notariales y propuestas para licitaciones: anexos 1-A, 1-B, finalidad probatoria, resaltado, índice de anexos y foliación automática.',
+    about: 'Sube tu escrito (demanda, recurso, propuesta técnica) y tus medios probatorios. DocuMaus etiqueta cada prueba como ANEXO 1-A, 1-B…, te deja escribir su finalidad probatoria, resaltar en amarillo las cláusulas importantes, arma la carátula y el índice de anexos con sus folios, y numera todas las hojas con el sello "FOLIO: 001". Funciona con PDF de cientos de páginas y nada se sube a internet.',
+  },
   {
     id: 'unir-pdf', module: 'merge', cat: 'organizar', icon: 'file-stack', status: 'ok',
     name: 'Unir PDF',
@@ -44,7 +53,7 @@ export const TOOLS = [
     short: 'Reduce el peso del PDF. Puedes pedir un tamaño máximo en MB.',
     title: 'Comprimir PDF gratis: reducir el tamaño a menos de 1 MB',
     desc: 'Reduce el peso de tus PDF para enviarlos por correo, WhatsApp o subirlos a un trámite. Elige un tamaño máximo en MB.',
-    about: '¿El portal del trámite te pide un PDF de menos de 2 MB? Elige "Tamaño máximo" y Maus prueba hasta dejarlo por debajo de ese peso. La compresión fuerte convierte las páginas en imagen: es perfecta para documentos escaneados.',
+    about: '¿El portal del trámite te pide un PDF de menos de 2 MB? Elige "Tamaño máximo" y DocuMaus prueba hasta dejarlo por debajo de ese peso. La compresión fuerte convierte las páginas en imagen: es perfecta para documentos escaneados.',
   },
   {
     id: 'jpg-a-pdf', module: 'images-to-pdf', cat: 'convertir-a', icon: 'image-plus', status: 'ok',
@@ -76,7 +85,7 @@ export const TOOLS = [
     short: 'Saca las ideas principales y palabras clave de un PDF largo.',
     title: 'Resumir PDF gratis con IA: resumen automático en español',
     desc: 'Obtén las ideas principales y las palabras clave de un PDF en segundos. Gratis, sin registro y sin subir tu documento.',
-    about: 'Maus lee todo el texto del PDF y elige las frases que mejor resumen el documento, junto con sus palabras clave. En Chrome de computadora compatible usa además la IA integrada del navegador (Gemini Nano), que trabaja dentro de tu equipo. Ideal para separatas, leyes, contratos e informes.',
+    about: 'DocuMaus lee todo el texto del PDF y elige las frases que mejor resumen el documento, junto con sus palabras clave. En Chrome de computadora compatible usa además la IA integrada del navegador (Gemini Nano), que trabaja dentro de tu equipo. Ideal para separatas, leyes, contratos e informes.',
   },
   {
     id: 'organizar-pdf', module: 'organize', cat: 'organizar', icon: 'layout-grid', status: 'ok',
@@ -156,7 +165,7 @@ export const TOOLS = [
     short: 'Toma fotos de tus documentos con el celular y conviértelas en un PDF nítido.',
     title: 'Escanear a PDF gratis desde el celular',
     desc: 'Escanea documentos con la cámara de tu celular y obtén un PDF limpio, en blanco y negro o a color. Sin instalar apps.',
-    about: 'Toma una foto a cada hoja (o elige fotos de tu galería). Maus mejora el contraste para que parezca escaneado, endereza las fotos y las junta en un solo PDF listo para enviar.',
+    about: 'Toma una foto a cada hoja (o elige fotos de tu galería). DocuMaus mejora el contraste para que parezca escaneado, endereza las fotos y las junta en un solo PDF listo para enviar.',
   },
   {
     id: 'reparar-pdf', module: 'repair', cat: 'optimizar', icon: 'wrench', status: 'ok',
@@ -164,7 +173,7 @@ export const TOOLS = [
     short: 'Recupera PDF dañados que no se abren o muestran errores.',
     title: 'Reparar PDF dañado gratis',
     desc: 'Repara archivos PDF dañados o corruptos y recupera su contenido. Gratis, sin registro y sin subir tus archivos.',
-    about: 'Maus reconstruye la estructura interna del PDF. Si el archivo está muy dañado, rescata las páginas que se puedan leer y las guarda en un PDF nuevo.',
+    about: 'DocuMaus reconstruye la estructura interna del PDF. Si el archivo está muy dañado, rescata las páginas que se puedan leer y las guarda en un PDF nuevo.',
   },
   {
     id: 'word-a-pdf', module: 'word-to-pdf', cat: 'convertir-a', icon: 'file-text', status: 'ok',
@@ -172,7 +181,7 @@ export const TOOLS = [
     short: 'Convierte documentos de Word (DOCX) en PDF.',
     title: 'Word a PDF gratis: convertir DOCX a PDF',
     desc: 'Convierte tus documentos de Word (.docx) a PDF en el navegador. Gratis, sin registro y sin subir tus archivos.',
-    about: 'Maus dibuja cada página de tu documento de Word tal como se ve y la guarda en PDF. Funciona con archivos .docx; si tienes un .doc antiguo, ábrelo en Word y guárdalo como .docx.',
+    about: 'DocuMaus dibuja cada página de tu documento de Word tal como se ve y la guarda en PDF. Funciona con archivos .docx; si tienes un .doc antiguo, ábrelo en Word y guárdalo como .docx.',
   },
   {
     id: 'powerpoint-a-pdf', module: 'pptx-to-pdf', cat: 'convertir-a', icon: 'presentation', status: 'ok',
@@ -204,7 +213,7 @@ export const TOOLS = [
     short: 'Convierte tu PDF en un documento de Word editable.',
     title: 'PDF a Word gratis: convertir PDF a DOCX editable',
     desc: 'Convierte PDF a Word (.docx) editable con títulos, párrafos y listas. Gratis, sin registro y sin subir tus archivos.',
-    about: 'Maus lee el texto del PDF, reconoce títulos, párrafos y viñetas y arma un Word que puedes editar. Si el PDF es escaneado, pásalo antes por "OCR PDF".',
+    about: 'DocuMaus lee el texto del PDF, reconoce títulos, párrafos y viñetas y arma un Word que puedes editar. Si el PDF es escaneado, pásalo antes por "OCR PDF".',
   },
   {
     id: 'pdf-a-powerpoint', module: 'pdf-to-pptx', cat: 'convertir-desde', icon: 'presentation', status: 'ok',
@@ -220,7 +229,7 @@ export const TOOLS = [
     short: 'Pasa las tablas de tu PDF a una hoja de Excel.',
     title: 'PDF a Excel gratis: convertir tablas PDF a XLSX',
     desc: 'Extrae las tablas de un PDF a Excel (.xlsx): estados de cuenta, listas de precios, reportes. Gratis y sin registro.',
-    about: 'Maus detecta filas y columnas según la posición del texto y convierte los números para que puedas sumarlos en Excel. Funciona mejor con PDF generados por sistemas (no escaneados).',
+    about: 'DocuMaus detecta filas y columnas según la posición del texto y convierte los números para que puedas sumarlos en Excel. Funciona mejor con PDF generados por sistemas (no escaneados).',
   },
   {
     id: 'pdf-a-pdfa', module: 'pdf-to-pdfa', cat: 'convertir-desde', icon: 'archive', status: 'ok',
@@ -228,7 +237,7 @@ export const TOOLS = [
     short: 'Convierte tu PDF al formato de archivo a largo plazo PDF/A.',
     title: 'Convertir PDF a PDF/A gratis',
     desc: 'Convierte PDF a PDF/A-2b, el formato que piden muchas mesas de partes y entidades para archivar documentos. Gratis.',
-    about: 'El PDF/A garantiza que el documento se vea igual dentro de muchos años. Maus agrega el perfil de color y los metadatos que exige la norma. Si el PDF usa fuentes no incrustadas, convierte esas páginas a imagen para cumplirla.',
+    about: 'El PDF/A garantiza que el documento se vea igual dentro de muchos años. DocuMaus agrega el perfil de color y los metadatos que exige la norma. Si el PDF usa fuentes no incrustadas, convierte esas páginas a imagen para cumplirla.',
   },
   {
     id: 'recortar-pdf', module: 'crop', cat: 'editar', icon: 'crop', status: 'ok',
@@ -236,7 +245,7 @@ export const TOOLS = [
     short: 'Recorta los márgenes o una zona de las páginas.',
     title: 'Recortar PDF gratis: quitar márgenes',
     desc: 'Recorta las páginas de un PDF: quita márgenes blancos o elige la zona que quieres conservar. Gratis y sin registro.',
-    about: 'Dibuja el área que quieres conservar o usa "Quitar márgenes" para que Maus detecte el contenido. Puedes aplicarlo a todas las páginas o solo a una.',
+    about: 'Dibuja el área que quieres conservar o usa "Quitar márgenes" para que DocuMaus detecte el contenido. Puedes aplicarlo a todas las páginas o solo a una.',
   },
   {
     id: 'editar-pdf', module: 'edit', cat: 'editar', icon: 'file-pen-line', status: 'ok',
@@ -276,7 +285,7 @@ export const TOOLS = [
     short: 'Encuentra las diferencias de texto entre dos versiones de un PDF.',
     title: 'Comparar dos PDF gratis: ver diferencias',
     desc: 'Compara dos versiones de un PDF y mira qué texto se agregó, se quitó o cambió. Ideal para contratos. Gratis.',
-    about: 'Sube la versión original y la nueva. Maus marca en verde lo agregado y en rojo lo eliminado, página por página, y puedes descargar el informe.',
+    about: 'Sube la versión original y la nueva. DocuMaus marca en verde lo agregado y en rojo lo eliminado, página por página, y puedes descargar el informe.',
   },
   {
     id: 'traducir-pdf', module: 'translate', cat: 'ia', icon: 'languages', status: 'ok',
@@ -292,7 +301,7 @@ export const TOOLS = [
     short: 'Convierte tu PDF en texto Markdown para usarlo en ChatGPT, Notion y más.',
     title: 'PDF a Markdown gratis',
     desc: 'Convierte PDF a Markdown (.md) con títulos, párrafos y listas. Perfecto para usarlo con IA, Notion u Obsidian.',
-    about: 'Maus reconoce los títulos por el tamaño de la letra y arma un Markdown limpio. Es la forma más fácil de darle un documento a una IA sin perder la estructura.',
+    about: 'DocuMaus reconoce los títulos por el tamaño de la letra y arma un Markdown limpio. Es la forma más fácil de darle un documento a una IA sin perder la estructura.',
   },
 ];
 
@@ -328,4 +337,4 @@ export const FLOWS = [
 ];
 
 // A qué herramientas se puede pasar un PDF terminado.
-export const CONTINUE_WITH = ['comprimir-pdf', 'unir-pdf', 'firmar-pdf', 'firma-digital', 'proteger-pdf', 'numerar-paginas', 'marca-de-agua', 'editar-pdf', 'organizar-pdf', 'pdf-a-pdfa', 'censurar-pdf', 'pdf-a-word', 'ocr-pdf'];
+export const CONTINUE_WITH = ['armar-expediente', 'comprimir-pdf', 'unir-pdf', 'firmar-pdf', 'firma-digital', 'proteger-pdf', 'numerar-paginas', 'marca-de-agua', 'editar-pdf', 'organizar-pdf', 'pdf-a-pdfa', 'censurar-pdf', 'pdf-a-word', 'ocr-pdf'];
